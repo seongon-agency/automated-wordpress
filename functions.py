@@ -4,3 +4,6 @@ def first_funtion():
 
 def second_function():
     return None
+
+def third_function():
+    return None
