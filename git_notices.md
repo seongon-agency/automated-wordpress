@@ -13,6 +13,7 @@ git commit -m "message"
 
 ## third: push the changes to github repo
 git push <remote> <branch>
+
 git push origin main
 
 - "origin" is the name we gave to the current remote. A repo can have different remotes.
