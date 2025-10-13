@@ -60,7 +60,30 @@ creds=get_creds()
 
 ## Normalize all words to base characters: (mỹ nhân -> my nhan)
 def strip_diacritics(s: str) -> str:
-    nfkd = unicodedata.normalize("NFD", s or "")
+    # Vietnamese character mappings for precomposed characters
+    vietnamese_map = {
+        'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+        'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+        'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+        'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+        'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+        'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+        'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+        'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+        'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+        'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+        'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+        'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+        'đ': 'd', 'Đ': 'd',
+    }
+
+    # Apply Vietnamese character mapping
+    result = ""
+    for char in (s or ""):
+        result += vietnamese_map.get(char.lower(), char)
+
+    # Then apply NFD normalization for any remaining diacritics
+    nfkd = unicodedata.normalize("NFD", result)
     return "".join(ch for ch in nfkd if unicodedata.category(ch) != "Mn")
 
 ## Get slug format of words
@@ -157,7 +180,7 @@ def guess_ext_from_url(u: str) -> str:
     if "svg" in u:  return ".svg"
     return ".jpg"
 
-#Function for downloading images
+#Function for downloading images to file
 def download_to_file(url: str, dst_path: str, timeout: int = 60):
     with requests.get(url, stream=True, timeout=timeout) as r:
         r.raise_for_status()
@@ -165,8 +188,15 @@ def download_to_file(url: str, dst_path: str, timeout: int = 60):
             for chunk in r.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
+
+#Function for downloading images to memory (BytesIO)
+def download_to_memory(url: str, timeout: int = 60) -> io.BytesIO:
+    """Download image directly to memory and return BytesIO object."""
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
+    return io.BytesIO(response.content)
                     
-#Function for resizing images
+#Function for resizing images from file
 def resize_fit(src_path: str, dst_path: str, max_w: int, max_h: int):
     with Image.open(src_path) as im:
         w, h = im.size
@@ -175,6 +205,30 @@ def resize_fit(src_path: str, dst_path: str, max_w: int, max_h: int):
         new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
 
         # convert + resize
+        im = im.convert("RGBA").resize(new_size, Image.LANCZOS)
+
+        # choose save format based on extension
+        ext = os.path.splitext(dst_path)[1].lower()
+        if ext in {".jpg", ".jpeg"}:
+            # flatten alpha for JPEG
+            bg = Image.new("RGB", im.size, (255, 255, 255))
+            bg.paste(im, mask=im.split()[-1])
+            bg.save(dst_path, format="JPEG", quality=92, optimize=True)
+        elif ext == ".png":
+            im.save(dst_path, format="PNG", optimize=True)
+        elif ext == ".webp":
+            im.save(dst_path, format="WEBP", quality=90, method=6)
+        else:
+            im.save(dst_path)  # fallback: keep detected format
+
+#Function for resizing images from memory (BytesIO) - EXACT dimensions
+def resize_fit_memory(img_bytes: io.BytesIO, dst_path: str, max_w: int, max_h: int):
+    """Resize image from BytesIO to EXACT dimensions and save to file."""
+    with Image.open(img_bytes) as im:
+        # Force exact dimensions (may distort aspect ratio)
+        new_size = (max_w, max_h)
+
+        # convert + resize to exact dimensions
         im = im.convert("RGBA").resize(new_size, Image.LANCZOS)
 
         # choose save format based on extension
