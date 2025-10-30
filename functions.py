@@ -56,7 +56,17 @@ def get_creds():
         with open("token.json", "w") as f:
             f.write(creds.to_json())
     return creds
-creds=get_creds()
+
+# Only get credentials when this module is run directly or when needed
+# Don't auto-execute on import
+creds = None
+
+def _ensure_creds():
+    """Lazy load credentials only when needed."""
+    global creds
+    if creds is None:
+        creds = get_creds()
+    return creds
 
 ## Normalize all words to base characters: (mỹ nhân -> my nhan)
 def strip_diacritics(s: str) -> str:
@@ -128,8 +138,8 @@ def extract_file_id(url: str) -> str:   #Extract a Drive fileId from common Docs
         return qs["id"][0]
     raise ValueError(f"Could not extract file ID from URL: {url}")
 # Function for exporting html files from docs id
-def export_doc_html_bytes(file_id: str) -> bytes:
-    drive = build("drive", "v3", credentials=creds)
+def export_doc_html_bytes(file_id: str) -> tuple:
+    drive = build("drive", "v3", credentials=_ensure_creds())
     meta = drive.files().get(fileId=file_id, fields="id,name,mimeType").execute()
     if meta["mimeType"] != "application/vnd.google-apps.document":
         raise TypeError(f"Not a Google Doc: {meta['name']} [{meta['mimeType']}]")
