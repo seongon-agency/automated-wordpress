@@ -9,3 +9,5 @@ pandas
 beautifulsoup4
 requests
 Pillow
+python-dotenv
+pydantic

@@ -20,8 +20,7 @@ from functions import get_file_names
 from functions import download_images
 from functions import resize_image
 from functions import upload_resized_image
-from functions import transform_html
-# from html_agent_test import html_agent
+# from functions import transform_html
 
 # Define list of docs url to run containing [{"url":  , "main_keyword": }]
 docs_url_to_run=[]

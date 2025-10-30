@@ -1,35 +1,9 @@
-from datetime import datetime
+import re
+import requests
+from typing import Dict, Any
+from bs4 import BeautifulSoup
 
-from pydantic import BaseModel, PositiveInt
-
-
-class User(BaseModel):
-    id: int  
-    name: str = 'John Doe'  
-    signup_ts: datetime | None  
-    tastes: dict[str, PositiveInt]  
-
-
-external_data = {
-    'id': 123,
-    'signup_ts': '2019-06-01 12:22',  
-    'tastes': {
-        'wine': 9,
-        'cheese': -7,  
-        'cabbage': '1',  
-    },
-}
-
-user = User(external_data)  
-
-print(user.id)  
-#> 123
-print(user.model_dump())  
-"""
-{
-    'id': 123,
-    'name': 'John Doe',
-    'signup_ts': datetime.datetime(2019, 6, 1, 12, 22),
-    'tastes': {'wine': 9, 'cheese': 7, 'cabbage': 1},
-}
-"""
+published_url="https://docs.google.com/document/d/e/2PACX-1vTDCwHgnP-VTBgggyE8z8fjBQMblE_clLwRQah2GTdLcnCcetiWNGfQgHaEg05fMg7b7OrJsYSRXGw2/pub"
+from tools.google_docs_converter import google_docs_to_html
+from utils.html_extractor import extract_title_from_content
+print(extract_title_from_content(google_docs_to_html(published_url)['raw_html']))
