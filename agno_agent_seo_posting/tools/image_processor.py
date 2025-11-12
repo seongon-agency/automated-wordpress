@@ -1,485 +1,282 @@
 """
-Tool 2: Image Processing & Tag Generator
-Handles image resizing, WordPress upload, and generates proper <img> tags
+Image Processor
 
-Flow:
-1. Extract image tags from HTML
-2. Download images from Google Docs
-3. Resize images to target dimensions
-4. Upload images to WordPress (if credentials provided)
-5. Replace image URLs in HTML with WordPress URLs
+Downloads images from URLs, resizes them according to configuration,
+and prepares them for WordPress upload.
 """
 
 import os
-import io
 import re
-import base64
 import requests
-from typing import Dict, List, Any, Optional
-from pathlib import Path
+import urllib.request
 from PIL import Image
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from pathlib import Path
+from typing import Dict, List, Optional, Any
+from urllib.parse import urlparse, unquote
 
 
-class ImageProcessor:
-    """Process images from HTML content."""
+# Directories for image processing
+RAW_IMAGES_DIR = Path("raw_images")
+RESIZED_IMAGES_DIR = Path("resized_images")
 
-    def __init__(self, output_dir: str = "processed_images"):
-        """
-        Initialize the image processor.
-
-        Args:
-            output_dir: Directory to save processed images
-        """
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
-
-    def extract_images_from_html(self, html_content: str) -> List[Dict[str, Any]]:
-        """
-        Extract all image references from HTML content.
-
-        Args:
-            html_content: HTML string containing images
-
-        Returns:
-            List of dictionaries containing image info (src, alt, title, etc.)
-        """
-        soup = BeautifulSoup(html_content, "html.parser")
-        images = []
-
-        for idx, img in enumerate(soup.find_all("img")):
-            img_info = {
-                "index": idx,
-                "src": img.get("src", ""),
-                "alt": img.get("alt", ""),
-                "title": img.get("title", ""),
-                "width": img.get("width"),
-                "height": img.get("height"),
-                "original_tag": str(img)
-            }
-            images.append(img_info)
-
-        return images
-
-    def download_image(self, url: str, timeout: int = 60) -> io.BytesIO:
-        """
-        Download image from URL to memory.
-
-        Args:
-            url: Image URL
-            timeout: Request timeout in seconds
-
-        Returns:
-            BytesIO object containing image data
-        """
-        response = requests.get(url, timeout=timeout)
-        response.raise_for_status()
-        return io.BytesIO(response.content)
-
-    def resize_image(
-        self,
-        img_bytes: io.BytesIO,
-        target_width: Optional[int] = 800,
-        target_height: Optional[int] = None,
-        maintain_aspect: bool = True
-    ) -> tuple[Image.Image, int, int]:
-        """
-        Resize image to target dimensions.
-
-        Args:
-            img_bytes: BytesIO object containing image data
-            target_width: Desired width (default: 800px)
-            target_height: Desired height (None = maintain aspect ratio)
-            maintain_aspect: Whether to maintain aspect ratio
-
-        Returns:
-            Tuple of (resized_image, new_width, new_height)
-        """
-        with Image.open(img_bytes) as im:
-            original_width, original_height = im.size
-
-            if maintain_aspect and target_height is None:
-                # Calculate height to maintain aspect ratio
-                if target_width:
-                    ratio = target_width / original_width
-                    new_width = target_width
-                    new_height = int(original_height * ratio)
-                else:
-                    new_width, new_height = original_width, original_height
-            elif target_width and target_height:
-                # Use exact dimensions (may distort)
-                new_width, new_height = target_width, target_height
-            else:
-                # No resize needed
-                new_width, new_height = original_width, original_height
-
-            # Don't upscale
-            if new_width > original_width:
-                new_width, new_height = original_width, original_height
-
-            # Resize image
-            resized = im.convert("RGBA").resize((new_width, new_height), Image.LANCZOS)
-
-            return resized, new_width, new_height
-
-    def save_image(
-        self,
-        image: Image.Image,
-        filename: str,
-        format: str = "JPEG",
-        quality: int = 92
-    ) -> str:
-        """
-        Save image to disk.
-
-        Args:
-            image: PIL Image object
-            filename: Output filename
-            format: Image format (JPEG, PNG, WEBP)
-            quality: Compression quality (1-100)
-
-        Returns:
-            Path to saved file
-        """
-        output_path = self.output_dir / filename
-
-        if format.upper() in ["JPEG", "JPG"]:
-            # Convert RGBA to RGB for JPEG
-            bg = Image.new("RGB", image.size, (255, 255, 255))
-            if image.mode == "RGBA":
-                bg.paste(image, mask=image.split()[-1])
-            else:
-                bg = image.convert("RGB")
-            bg.save(output_path, format="JPEG", quality=quality, optimize=True)
-        elif format.upper() == "PNG":
-            image.save(output_path, format="PNG", optimize=True)
-        elif format.upper() == "WEBP":
-            image.save(output_path, format="WEBP", quality=quality, method=6)
-        else:
-            image.save(output_path)
-
-        return str(output_path)
-
-    def upload_to_wordpress(
-        self,
-        image_path: str,
-        alt_text: str = "",
-        title: str = "",
-        wordpress_site_url: str = "",
-        wordpress_username: str = "",
-        wordpress_app_password: str = ""
-    ) -> Dict[str, Any]:
-        """
-        Upload image to WordPress media library.
-
-        Args:
-            image_path: Local path to the image file
-            alt_text: Alt text for accessibility
-            title: Image title
-            wordpress_site_url: WordPress site URL
-            wordpress_username: WordPress username
-            wordpress_app_password: WordPress application password
-
-        Returns:
-            Dictionary containing upload result with media_id and url
-        """
-        try:
-            # Prepare API endpoint
-            api_url = f"{wordpress_site_url.rstrip('/')}/wp-json/wp/v2/media"
-
-            # Create authorization header
-            token = base64.b64encode(
-                f"{wordpress_username}:{wordpress_app_password}".encode("utf-8")
-            ).decode("utf-8")
-
-            # Read image file
-            with open(image_path, 'rb') as f:
-                image_data = f.read()
-
-            # Get filename and detect mime type
-            filename = Path(image_path).name
-            ext = Path(image_path).suffix.lower()
-            mime_types = {
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-                '.gif': 'image/gif',
-                '.webp': 'image/webp',
-            }
-            mime_type = mime_types.get(ext, 'image/jpeg')
-
-            # Prepare headers
-            headers = {
-                'Authorization': f'Basic {token}',
-                'Content-Type': mime_type,
-                'Content-Disposition': f'attachment; filename={filename}'
-            }
-
-            # Prepare parameters
-            params = {
-                'title': title or filename,
-                'alt_text': alt_text,
-            }
-
-            # Upload to WordPress
-            response = requests.post(
-                api_url,
-                headers=headers,
-                data=image_data,
-                params=params,
-                timeout=60
-            )
-            response.raise_for_status()
-
-            result = response.json()
-
-            return {
-                "success": True,
-                "media_id": result['id'],
-                "url": result.get('source_url') or result['guid']['rendered'],
-                "error": None
-            }
-
-        except Exception as e:
-            return {
-                "success": False,
-                "media_id": None,
-                "url": None,
-                "error": str(e)
-            }
-
-    def generate_img_tag(
-        self,
-        src: str,
-        alt: str = "",
-        width: Optional[int] = None,
-        height: Optional[int] = None,
-        css_class: str = "",
-        title: str = ""
-    ) -> str:
-        """
-        Generate SEO-friendly <img> tag.
-
-        Args:
-            src: Image source URL
-            alt: Alt text for accessibility
-            width: Image width
-            height: Image height
-            css_class: CSS class(es)
-            title: Title attribute
-
-        Returns:
-            HTML img tag string
-        """
-        parts = [f'<img src="{src}"']
-
-        if alt:
-            parts.append(f'alt="{alt}"')
-        if width:
-            parts.append(f'width="{width}"')
-        if height:
-            parts.append(f'height="{height}"')
-        if css_class:
-            parts.append(f'class="{css_class}"')
-        if title:
-            parts.append(f'title="{title}"')
-
-        parts.append("/>")
-        return " ".join(parts)
+# Ensure directories exist
+RAW_IMAGES_DIR.mkdir(exist_ok=True)
+RESIZED_IMAGES_DIR.mkdir(exist_ok=True)
 
 
-def process_images(
-    html_content: str,
-    target_width: Optional[int] = 800,
-    target_height: Optional[int] = None,
-    upload_to_wordpress: bool = False,
-    wordpress_site_url: Optional[str] = None,
-    wordpress_username: Optional[str] = None,
-    wordpress_app_password: Optional[str] = None
-) -> Dict[str, Any]:
+def extract_image_urls(html: str) -> List[str]:
     """
-    Process images from HTML content: extract, download, resize, and optionally upload to WordPress.
-
-    Flow:
-    1. Extract image tags from HTML
-    2. Download images from their source URLs
-    3. Resize images to target dimensions
-    4. Upload to WordPress (if credentials provided)
-    5. Replace image URLs in HTML with WordPress URLs
+    Extract all image URLs from HTML.
 
     Args:
-        html_content: HTML content containing image references
-        target_width: Desired image width (default: 800px)
-        target_height: Desired image height (None = maintain aspect ratio)
-        upload_to_wordpress: Whether to upload images to WordPress
-        wordpress_site_url: WordPress site URL (from WP_BASE_URL env if not provided)
-        wordpress_username: WordPress username (from WP_USERNAME env if not provided)
-        wordpress_app_password: WordPress app password (from WP_APP_PASS env if not provided)
+        html: HTML content
 
     Returns:
-        Dictionary containing:
-        - processed_html: HTML with properly formatted <img> tags and WordPress URLs
-        - image_metadata: List of processed images with URLs and dimensions
-        - success: Boolean indicating success
-        - error: Error message if failed
+        List of image URLs
     """
-    try:
-        processor = ImageProcessor()
+    # Find all <img src="..."> tags
+    img_pattern = r'<img[^>]+src=["\']([^"\']+)["\']'
+    urls = re.findall(img_pattern, html, re.IGNORECASE)
 
-        # Get WordPress credentials from environment if not provided
-        if upload_to_wordpress:
-            if not wordpress_site_url:
-                wordpress_site_url = os.getenv("WP_BASE_URL")
-            if not wordpress_username:
-                wordpress_username = os.getenv("WP_USERNAME")
-            if not wordpress_app_password:
-                wordpress_app_password = os.getenv("WP_APP_PASS")
+    # Filter out data URLs and invalid URLs
+    valid_urls = []
+    for url in urls:
+        if url.startswith('http://') or url.startswith('https://'):
+            valid_urls.append(url)
 
-            # Validate credentials
-            if not all([wordpress_site_url, wordpress_username, wordpress_app_password]):
-                return {
-                    "success": False,
-                    "processed_html": html_content,
-                    "image_metadata": [],
-                    "error": "WordPress credentials not provided. Set WP_BASE_URL, WP_USERNAME, and WP_APP_PASS."
-                }
+    return valid_urls
 
-        # Extract images from HTML
-        images = processor.extract_images_from_html(html_content)
 
-        if not images:
-            return {
-                "success": True,
-                "processed_html": html_content,
-                "image_metadata": [],
-                "error": None
-            }
+def download_images(image_urls: List[str], base_name: str = "image") -> Dict[str, Any]:
+    """
+    Download images from URLs to raw_images directory.
 
-        print(f"   Found {len(images)} images to process")
+    Args:
+        image_urls: List of image URLs to download
+        base_name: Base name for saved files (default: "image")
 
-        # Process each image
-        processed_images = []
-        soup = BeautifulSoup(html_content, "html.parser")
+    Returns:
+        Dict containing:
+        - success: bool
+        - downloaded: List[Dict] with url, local_path, filename
+        - failed: List[Dict] with url, error
+    """
+    downloaded = []
+    failed = []
 
-        for idx, img_info in enumerate(images):
-            try:
-                print(f"   Processing image {idx + 1}/{len(images)}...")
+    for idx, url in enumerate(image_urls, 1):
+        try:
+            # Default to .png for Google Docs images (like old code)
+            ext = '.png'
 
-                # Step 1: Download image
-                img_bytes = processor.download_image(img_info["src"])
+            # Generate filename
+            filename = f"{base_name}_{idx}{ext}"
+            local_path = RAW_IMAGES_DIR / filename
 
-                # Step 2: Resize image
-                resized_img, new_width, new_height = processor.resize_image(
-                    img_bytes,
-                    target_width=target_width,
-                    target_height=target_height
-                )
+            # Download image using urllib (like old code)
+            # This handles Google Docs images better than requests
+            print(f"   Downloading image {idx}/{len(image_urls)}: {url[:80]}...")
+            urllib.request.urlretrieve(url, str(local_path))
 
-                # Step 3: Save image locally
-                filename = f"image_{idx + 1}.jpg"
-                local_path = processor.save_image(resized_img, filename)
+            print(f"   ✓ Downloaded: {filename}")
 
-                # Step 4: Upload to WordPress (if enabled)
-                wordpress_url = None
-                wordpress_media_id = None
-                if upload_to_wordpress:
-                    print(f"      Uploading to WordPress...")
-                    upload_result = processor.upload_to_wordpress(
-                        image_path=local_path,
-                        alt_text=img_info["alt"] or f"Image {idx + 1}",
-                        title=img_info["title"] or f"Image {idx + 1}",
-                        wordpress_site_url=wordpress_site_url,
-                        wordpress_username=wordpress_username,
-                        wordpress_app_password=wordpress_app_password
-                    )
+            downloaded.append({
+                "url": url,
+                "local_path": str(local_path),
+                "filename": filename
+            })
 
-                    if upload_result["success"]:
-                        wordpress_url = upload_result["url"]
-                        wordpress_media_id = upload_result["media_id"]
-                        print(f"      ✓ Uploaded to WordPress: {wordpress_url}")
-                    else:
-                        print(f"      ✗ WordPress upload failed: {upload_result['error']}")
+        except Exception as e:
+            print(f"   ✗ Failed to download image {idx}: {str(e)}")
+            failed.append({
+                "url": url,
+                "error": str(e)
+            })
 
-                # Determine final URL (WordPress URL if available, otherwise local path)
-                final_url = wordpress_url if wordpress_url else local_path
+    return {
+        "success": len(failed) == 0,
+        "downloaded": downloaded,
+        "failed": failed
+    }
 
-                # Step 5: Generate new img tag with final URL
-                new_img_tag = processor.generate_img_tag(
-                    src=final_url,
-                    alt=img_info["alt"] or f"Image {idx + 1}",
-                    width=new_width,
-                    height=new_height,
-                    title=img_info["title"]
-                )
 
-                # Store metadata
-                image_metadata = {
-                    "index": idx,
-                    "original_src": img_info["src"],
-                    "local_path": local_path,
-                    "resized_path": local_path,  # For backward compatibility
-                    "width": new_width,
-                    "height": new_height,
-                    "alt": img_info["alt"] or f"Image {idx + 1}",
-                    "title": img_info["title"] or "",
-                    "new_tag": new_img_tag
-                }
+def resize_images(
+    image_paths: List[str],
+    target_width: int = 800,
+    target_height: Optional[int] = None,
+    quality: int = 92,
+    image_format: str = "JPEG"
+) -> Dict[str, Any]:
+    """
+    Resize images according to configuration.
 
-                # Add WordPress metadata if uploaded
-                if wordpress_url:
-                    image_metadata["wordpress_url"] = wordpress_url
-                    image_metadata["wordpress_media_id"] = wordpress_media_id
-                    image_metadata["new_src"] = wordpress_url
-                else:
-                    image_metadata["new_src"] = local_path
+    Args:
+        image_paths: List of paths to images in raw_images directory
+        target_width: Target width in pixels
+        target_height: Target height (None = maintain aspect ratio)
+        quality: JPEG quality 1-100
+        image_format: Output format (JPEG, PNG, WEBP)
 
-                processed_images.append(image_metadata)
+    Returns:
+        Dict containing:
+        - success: bool
+        - resized: List[Dict] with original_path, resized_path, filename
+        - failed: List[Dict] with original_path, error
+    """
+    resized = []
+    failed = []
 
-                # Replace in HTML
-                img_tags = soup.find_all("img")
-                if idx < len(img_tags):
-                    img_tags[idx].replace_with(BeautifulSoup(new_img_tag, "html.parser"))
+    for img_path in image_paths:
+        try:
+            # Open image
+            img = Image.open(img_path)
 
-            except Exception as e:
-                print(f"   ✗ Failed to process image {idx + 1}: {e}")
-                processed_images.append({
-                    "index": idx,
-                    "error": str(e),
-                    "original_src": img_info["src"]
-                })
+            # Convert RGBA to RGB for JPEG
+            if image_format.upper() == 'JPEG' and img.mode in ('RGBA', 'LA', 'P'):
+                rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                rgb_img.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+                img = rgb_img
 
-        processed_html = str(soup)
+            # Calculate new dimensions
+            if target_height:
+                new_size = (target_width, target_height)
+            else:
+                # Maintain aspect ratio
+                width_percent = (target_width / float(img.size[0]))
+                new_height = int((float(img.size[1]) * float(width_percent)))
+                new_size = (target_width, new_height)
 
-        print(f"   ✓ Successfully processed {len(processed_images)} images")
+            # Resize image
+            resized_img = img.resize(new_size, Image.Resampling.LANCZOS)
 
+            # Generate output filename
+            original_name = Path(img_path).stem
+            ext = '.' + image_format.lower().replace('jpeg', 'jpg')
+            output_filename = f"resized_{original_name}{ext}"
+            output_path = RESIZED_IMAGES_DIR / output_filename
+
+            # Save resized image
+            resized_img.save(
+                output_path,
+                format=image_format.upper(),
+                quality=quality,
+                optimize=True
+            )
+
+            resized.append({
+                "original_path": img_path,
+                "resized_path": str(output_path),
+                "filename": output_filename,
+                "dimensions": new_size
+            })
+
+        except Exception as e:
+            failed.append({
+                "original_path": img_path,
+                "error": str(e)
+            })
+
+    return {
+        "success": len(failed) == 0,
+        "resized": resized,
+        "failed": failed
+    }
+
+
+def process_images_from_html(
+    html: str,
+    image_config: Optional[Dict] = None,
+    base_name: str = "image"
+) -> Dict[str, Any]:
+    """
+    Complete image processing pipeline: extract, download, resize.
+
+    This is a convenience function that combines all steps.
+
+    Args:
+        html: HTML content containing images
+        image_config: Dict with image settings (target_width, image_quality, etc.)
+        base_name: Base name for saved files
+
+    Returns:
+        Dict containing:
+        - success: bool
+        - processed_images: List[Dict] with original_url, local_path info
+        - failed: List of failures
+    """
+    # Default config
+    if not image_config:
+        image_config = {
+            "target_width": 800,
+            "image_quality": 92,
+            "image_format": "JPEG"
+        }
+
+    # Extract image URLs
+    image_urls = extract_image_urls(html)
+
+    if not image_urls:
         return {
             "success": True,
-            "processed_html": processed_html,
-            "image_metadata": processed_images,
-            "error": None
+            "processed_images": [],
+            "message": "No images found in HTML"
         }
 
-    except Exception as e:
+    # Download images
+    download_result = download_images(image_urls, base_name)
+
+    if not download_result['downloaded']:
         return {
             "success": False,
-            "processed_html": html_content,
-            "image_metadata": [],
-            "error": str(e)
+            "error": "Failed to download any images",
+            "failed": download_result['failed']
         }
 
+    # Resize images
+    image_paths = [img['local_path'] for img in download_result['downloaded']]
+    resize_result = resize_images(
+        image_paths,
+        target_width=image_config.get('target_width', 800),
+        target_height=image_config.get('target_height'),
+        quality=image_config.get('image_quality', 92),
+        image_format=image_config.get('image_format', 'JPEG')
+    )
 
-if __name__ == "__main__":
-    # Test the tool
-    test_html = '''
-    <html>
-        <body>
-            <p>Test paragraph</p>
-            <img src="https://via.placeholder.com/1200x800" alt="Test image" />
-        </body>
-    </html>
-    '''
+    # Combine results
+    processed = []
+    for download_info, resize_info in zip(download_result['downloaded'], resize_result['resized']):
+        processed.append({
+            "original_url": download_info['url'],
+            "raw_path": download_info['local_path'],
+            "resized_path": resize_info['resized_path'],
+            "filename": resize_info['filename'],
+            "dimensions": resize_info['dimensions']
+        })
 
-    result = process_images(test_html, target_width=800)
-    print(f"Success: {result['success']}")
-    print(f"Processed {len(result['image_metadata'])} images")
+    return {
+        "success": True,
+        "processed_images": processed,
+        "download_failed": download_result['failed'],
+        "resize_failed": resize_result['failed']
+    }
+
+
+# Make functions available as Agno tools
+extract_image_urls.__annotations__ = {'html': str, 'return': List[str]}
+download_images.__annotations__ = {'image_urls': List[str], 'base_name': str, 'return': Dict[str, Any]}
+resize_images.__annotations__ = {
+    'image_paths': List[str],
+    'target_width': int,
+    'target_height': Optional[int],
+    'quality': int,
+    'image_format': str,
+    'return': Dict[str, Any]
+}
+process_images_from_html.__annotations__ = {
+    'html': str,
+    'image_config': Optional[Dict],
+    'base_name': str,
+    'return': Dict[str, Any]
+}

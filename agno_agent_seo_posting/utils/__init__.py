@@ -1,14 +1,10 @@
 """
-SEO Blog Publishing Agent - Utilities Package
+Utilities package for SEO Publishing System.
 """
 
-from .template_parser import TemplateParser, extract_template_rules
-from .html_extractor import extract_first_heading, extract_title_from_content, remove_first_heading
+from .html_extractor import extract_title_from_html, extract_images_from_html
 
 __all__ = [
-    'TemplateParser',
-    'extract_template_rules',
-    'extract_first_heading',
-    'extract_title_from_content',
-    'remove_first_heading'
+    'extract_title_from_html',
+    'extract_images_from_html',
 ]

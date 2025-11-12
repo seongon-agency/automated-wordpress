@@ -1,130 +1,113 @@
 """
-HTML Content Extractor Utility
-Extracts useful information from HTML content
+HTML Extractor Utilities
+
+Helper functions to extract specific elements from HTML content.
 """
 
 import re
-from typing import Optional
 from bs4 import BeautifulSoup
+from typing import Optional, List
 
 
-def extract_first_heading(html_content: str) -> Optional[str]:
+def extract_title_from_html(html: str) -> Optional[str]:
     """
-    Extract the first h1 heading from HTML content.
-    This is typically the main title of the document.
+    Extract the main title (H1) from HTML content.
 
     Args:
-        html_content: HTML content to extract from
+        html: HTML content
 
     Returns:
-        The text of the first h1 heading, or None if not found
+        Title text or None if not found
     """
-    if not html_content:
-        return None
+    soup = BeautifulSoup(html, 'html.parser')
 
-    try:
-        soup = BeautifulSoup(html_content, "html.parser")
+    # Look for H1 tag
+    h1 = soup.find('h1')
+    if h1:
+        return h1.get_text().strip()
 
-        # Find the first h1 tag
-        h1_tag = soup.find('h1')
+    # Fallback: look for first H2
+    h2 = soup.find('h2')
+    if h2:
+        return h2.get_text().strip()
 
-        if h1_tag:
-            # Get the text content and clean it up
-            title = h1_tag.get_text(strip=True)
-            return title if title else None
-
-        return None
-
-    except Exception as e:
-        print(f"⚠️  Error extracting heading: {e}")
-        return None
+    return None
 
 
-def extract_title_from_content(html_content: str, fallback: Optional[str] = None) -> Optional[str]:
+def extract_images_from_html(html: str) -> List[str]:
     """
-    Extract the document title from HTML content.
-    Tries multiple methods in order:
-    1. First h1 heading
-    2. First h2 heading if no h1
-    3. Fallback value if provided
+    Extract all image URLs from HTML.
 
     Args:
-        html_content: HTML content to extract from
-        fallback: Fallback title if extraction fails
+        html: HTML content
 
     Returns:
-        Extracted title or fallback value
+        List of image URLs
     """
-    if not html_content:
-        return fallback
+    soup = BeautifulSoup(html, 'html.parser')
 
-    try:
-        soup = BeautifulSoup(html_content, "html.parser")
+    image_urls = []
+    for img in soup.find_all('img'):
+        src = img.get('src')
+        if src and (src.startswith('http://') or src.startswith('https://')):
+            image_urls.append(src)
 
-        # Try h1 first
-        h1_tag = soup.find('h1')
-        if h1_tag:
-            title = h1_tag.get_text(strip=True)
-            if title:
-                return title
-
-        # Fallback to h2
-        h2_tag = soup.find('h2')
-        if h2_tag:
-            title = h2_tag.get_text(strip=True)
-            if title:
-                return title
-
-        return fallback
-
-    except Exception as e:
-        print(f"⚠️  Error extracting title: {e}")
-        return fallback
+    return image_urls
 
 
-def remove_first_heading(html_content: str) -> str:
+def remove_content_before_h1(html: str) -> str:
     """
-    Remove the first h1 heading from HTML content.
-    Useful when the h1 is extracted as the post title and shouldn't be duplicated in content.
+    Remove all content before and including the first H1 tag.
+
+    This is a universal cleaning step that applies to all clients:
+    1. Find the first H1 tag
+    2. Remove everything before it
+    3. Remove the H1 itself
+    4. Return the cleaned HTML
+
+    The H1 is used as the WordPress post title, so it should not
+    appear in the content body.
 
     Args:
-        html_content: HTML content to process
+        html: HTML content
 
     Returns:
-        HTML content with first h1 removed
+        Cleaned HTML with H1 and everything before it removed
     """
-    if not html_content:
-        return html_content
+    # Use regex to find the H1 and remove everything before and including it
+    # This handles nested structures better than BeautifulSoup navigation
 
-    try:
-        soup = BeautifulSoup(html_content, "html.parser")
+    # Find the closing tag of the first H1
+    h1_pattern = r'<h1[^>]*>.*?</h1>'
+    match = re.search(h1_pattern, html, flags=re.IGNORECASE | re.DOTALL)
 
-        # Find and remove the first h1 tag
-        h1_tag = soup.find('h1')
-        if h1_tag:
-            h1_tag.decompose()
+    if not match:
+        # No H1 found, return original HTML
+        return html
 
-        return str(soup)
+    # Get the position after the closing </h1> tag
+    end_pos = match.end()
 
-    except Exception as e:
-        print(f"⚠️  Error removing heading: {e}")
-        return html_content
+    # Return everything after the H1 (removing everything before and including H1)
+    cleaned_html = html[end_pos:]
+
+    return cleaned_html.strip()
 
 
-if __name__ == "__main__":
-    # Test the extractor
-    test_html = '''
-    <html>
-        <body>
-            <h1>This is the Main Title</h1>
-            <p>Some content here</p>
-            <h2>A subheading</h2>
-        </body>
-    </html>
-    '''
+def clean_html_for_wordpress(html: str) -> str:
+    """
+    Apply all universal HTML cleaning rules.
 
-    title = extract_first_heading(test_html)
-    print(f"Extracted title: {title}")
+    This function applies cleaning rules that should be used for ALL clients:
+    1. Remove everything before and including the first H1
 
-    html_without_h1 = remove_first_heading(test_html)
-    print(f"\nHTML without h1:\n{html_without_h1}")
+    Args:
+        html: Raw HTML content
+
+    Returns:
+        Cleaned HTML ready for WordPress
+    """
+    # Apply universal cleaning: remove content before H1 and remove H1
+    html = remove_content_before_h1(html)
+
+    return html
