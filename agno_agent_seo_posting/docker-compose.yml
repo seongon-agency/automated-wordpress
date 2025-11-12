@@ -1,0 +1,68 @@
+# Docker Compose Configuration
+# WordPress SEO Publishing API
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordpress-seo-api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Persist database
+      - ./data:/app/data
+      # Persist credentials
+      - ./credentials:/app/credentials
+      # Logs
+      - ./logs:/app/logs
+      # For development: mount source code
+      # - .:/app
+    environment:
+      # API Configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - API_KEYS=${API_KEYS}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+
+      # Database
+      - CLIENT_DB_PATH=/app/data/clients.db
+
+      # Anthropic API
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+
+      # Google OAuth
+      - GOOGLE_CLIENT_SECRETS=/app/credentials/client_secret.json
+      - GOOGLE_TOKEN_PATH=/app/credentials/token.json
+
+      # WordPress (optional defaults)
+      - WP_BASE_URL=${WP_BASE_URL:-}
+      - WP_USERNAME=${WP_USERNAME:-}
+      - WP_APP_PASS=${WP_APP_PASS:-}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # Lark Suite (optional)
+      - LARK_APP_ID=${LARK_APP_ID:-}
+      - LARK_APP_SECRET=${LARK_APP_SECRET:-}
+
+    env_file:
+      - .env
+
+    restart: unless-stopped
+
+    networks:
+      - wordpress-seo-network
+
+networks:
+  wordpress-seo-network:
+    driver: bridge
+
+volumes:
+  data:
+  credentials:
+  logs:

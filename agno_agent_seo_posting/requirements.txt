@@ -1,13 +1,24 @@
+# Core Framework
 agno
 anthropic
-fastapi[standard]
-google-auth
-google-auth-oauthlib
-google-api-python-client
+
+# FastAPI and Web Server
+fastapi[standard]>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Google APIs
+google-auth>=2.16.0
+google-auth-oauthlib>=1.0.0
+google-api-python-client>=2.80.0
 gspread
+
+# Data Processing
 pandas
-beautifulsoup4
-requests
-Pillow
-python-dotenv
-pydantic
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+Pillow>=10.0.0
+
+# Utilities
+python-dotenv>=1.0.0
