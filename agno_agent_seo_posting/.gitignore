@@ -31,6 +31,8 @@ env/
 .env
 .env.local
 .env.*.local
+railway.env
+*.env
 
 # Credentials & Sensitive Files
 credentials/
@@ -38,6 +40,8 @@ client_secret.json
 token.json
 *.pem
 *.key
+api_keys.txt
+*_base64.txt
 
 # Database
 data/clients.db

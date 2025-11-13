@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nul)",
+      "Bash(python test_database.py:*)",
+      "Bash(if exist test_clients.db del test_clients.db)",
+      "Bash(if exist clients.db del clients.db)",
+      "Bash(python test_pattern_engine.py:*)",
+      "Bash(sqlite3:*)",
+      "Bash(python test_workflow_integration.py:*)",
+      "Bash(python -c:*)",
+      "Bash(python test_edit_project.py:*)",
+      "Bash(python utils/pattern_modifier.py:*)",
+      "Bash(python:*)",
+      "Bash(timeout 20 python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

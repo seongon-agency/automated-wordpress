@@ -1,12 +1,12 @@
 # WordPress SEO Publishing System
 
-**Automated Google Docs → WordPress Publishing Platform**
+**Automated Google Docs to WordPress Publishing Platform**
 
 Multi-client SEO content publishing system with AI-powered HTML transformation, natural language pattern editing, and multi-project management.
 
 ---
 
-## 🎯 Overview
+## Overview
 
 This system automates the complete workflow for publishing SEO content from Google Docs to WordPress with client-specific HTML transformations:
 
@@ -17,23 +17,96 @@ This system automates the complete workflow for publishing SEO content from Goog
 
 ### Key Features
 
-- ✨ **AI-Powered Configuration** - AI analyzes sample HTML and generates transformation patterns automatically
-- 🗣️ **Natural Language Editing** - Modify HTML patterns using plain English ("Make all h2 headings blue")
-- 🎯 **Multi-Project Management** - Configure once per client, publish many times
-- 🖼️ **Automated Image Processing** - Download, resize, and upload images automatically
-- 📊 **Publishing History** - Track all publishes with success/failure logs
-- 🔒 **Secure Credentials** - Isolated credentials directory (git-ignored)
+- **AI-Powered Configuration** - AI analyzes sample HTML and generates transformation patterns automatically
+- **Natural Language Editing** - Modify HTML patterns using plain English ("Make all h2 headings blue")
+- **Multi-Project Management** - Configure once per client, publish many times
+- **Automated Image Processing** - Download, resize, and upload images automatically
+- **Web Interface & CLI** - Choose between Streamlit UI (recommended) or command-line interface
+- **Publishing History** - Track all publishes with success/failure logs
+- **Secure Credentials** - Isolated credentials directory (git-ignored)
 
 ---
 
-## 📁 Project Structure
+## Quick Start
+
+### Prerequisites
+
+- **Python 3.11+**
+- **WordPress site** with REST API enabled
+- **WordPress Application Password** (not regular password)
+- **Google Cloud Project** with Drive API enabled (optional, for Google Docs API access)
+- **Anthropic API Key** (for AI features)
+
+### Installation
+
+```bash
+# Navigate to project directory
+cd agno_agent_seo_posting
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Configuration
+
+1. **Create `.env` file** (copy from `.env.example`):
+
+```env
+# Required: Anthropic API for AI features
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Optional: Default WordPress credentials (for "No Project" mode)
+WP_BASE_URL=https://your-wordpress-site.com
+WP_USERNAME=your_username
+WP_APP_PASS=xxxx xxxx xxxx xxxx
+
+# Optional: Database path
+CLIENT_DB_PATH=./data/clients.db
+
+# Optional: Image processing settings
+DEFAULT_IMAGE_WIDTH=800
+IMAGE_QUALITY=92
+IMAGE_FORMAT=JPEG
+```
+
+2. **Setup Google OAuth** (Optional, for Google Docs API):
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create/select project → Enable **Google Drive API**
+   - Create OAuth credentials (Desktop app)
+   - Download JSON → Rename to `client_secret.json`
+   - Place in `credentials/` directory
+
+3. **Get WordPress Application Password**:
+   - WordPress Admin → Users → Profile
+   - Scroll to "Application Passwords"
+   - Create new password → Copy it
+
+### Run the Application
+
+**Option 1: Streamlit UI (Recommended)**
+
+```bash
+streamlit run app_streamlit.py
+```
+
+Opens at: http://localhost:8501
+
+**Option 2: CLI**
+
+```bash
+python app/main.py
+```
+
+---
+
+## Project Structure
 
 ```
-wordpress-seo-publisher/
-├── app/                          # Application entry points
-│   ├── main.py                   # Main CLI application
+agno_agent_seo_posting/
+├── app/                          # CLI application
+│   ├── main.py                   # Main entry point
 │   ├── configure.py              # Project configuration wizard
-│   └── edit.py                   # Project editor (with natural language support)
+│   └── edit.py                   # Project editor
 │
 ├── src/                          # Core source code
 │   ├── database/                 # Database operations
@@ -63,107 +136,63 @@ wordpress-seo-publisher/
 │       └── settings.py           # Environment settings
 │
 ├── tests/                        # Test suite
-│   ├── test_database.py          # Database tests
-│   ├── test_workflow_integration.py   # Integration tests
-│   ├── test_pattern_engine.py    # Pattern transformation tests
-│   ├── test_pattern_modification.py   # Natural language editing tests
-│   └── ...                       # Additional test files
+│   ├── test_database.py
+│   ├── test_workflow_integration.py
+│   ├── test_pattern_engine.py
+│   └── test_pattern_modification.py
 │
 ├── data/                         # Runtime data
-│   ├── clients.db                # SQLite database
-│   └── images/                   # Temporary image storage
-│       ├── raw/                  # Downloaded images
-│       └── resized/              # Processed images
+│   └── clients.db                # SQLite database
 │
 ├── credentials/                  # Sensitive files (git-ignored)
 │   ├── client_secret.json        # Google OAuth credentials
 │   └── token.json                # Google OAuth token
 │
-├── docs/                         # Documentation
-│   └── LARK_IMPLEMENTATION_PLAN.md    # Future Larksuite integration plan
+├── raw_images/                   # Temporary raw images (git-ignored)
+├── resized_images/               # Temporary processed images (git-ignored)
 │
-├── README.md                     # This file
+├── app_streamlit.py              # Streamlit UI (NEW - Primary Interface)
 ├── requirements.txt              # Python dependencies
 ├── .env                          # Environment variables (git-ignored)
 ├── .env.example                  # Example environment file
-└── .gitignore                    # Git ignore rules
+├── .gitignore                    # Git ignore rules
+├── README.md                     # This file
+├── SETUP.md                      # Detailed setup guide
+└── HANDOFF.md                    # Developer handoff documentation
 ```
 
 ---
 
-## 🚀 Quick Start
+## Usage Guide
 
-### Prerequisites
+### Streamlit UI (Recommended)
 
-- **Python 3.11+**
-- **WordPress site** with REST API enabled
-- **WordPress Application Password** (not regular password)
-- **Google Cloud Project** with Drive API enabled
-- **Google OAuth Credentials** (client_secret.json)
-- **Anthropic API Key** (for AI features)
+Run: `streamlit run app_streamlit.py`
 
-### Installation
+**Features:**
+- **Dashboard** - View system status and quick stats
+- **Projects** - View all configured WordPress sites
+- **Create Project** - Add new WordPress site with wizard
+- **Edit Project** - Modify existing project settings
+- **AI Pattern Editor** - Use natural language to modify HTML patterns
+- **Scan HTML Template** - Upload sample HTML and auto-generate patterns
+- **Publish Content** - Publish Google Docs to WordPress
+- **Publishing History** - View past publications
 
-```bash
-# Navigate to project directory
-cd agno_agent_seo_posting
+**Publishing Workflow (Streamlit):**
+1. Navigate to "Publish Content"
+2. Select your project
+3. Paste Google Docs URL (must be published to web)
+4. Click "Publish to WordPress"
+5. Wait for completion (1-2 minutes)
+6. Get WordPress post URL
 
-# Install dependencies
-pip install -r requirements.txt
+### CLI Application
+
+Run: `python app/main.py`
+
+**Main Menu:**
 ```
-
-### Configuration
-
-1. **Create `.env` file** (copy from `.env.example`):
-
-```env
-# Required: Anthropic API for AI features
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Optional: Default WordPress credentials
-WP_BASE_URL=https://your-wordpress-site.com
-WP_USERNAME=your_username
-WP_APP_PASS=xxxx xxxx xxxx xxxx
-
-# Optional: Database path
-CLIENT_DB_PATH=./data/clients.db
-
-# Optional: Image processing settings
-DEFAULT_IMAGE_WIDTH=800
-IMAGE_QUALITY=92
-IMAGE_FORMAT=JPEG
-```
-
-2. **Setup Google OAuth**:
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create/select project → Enable **Google Drive API**
-   - Create OAuth credentials (Desktop app)
-   - Download JSON → Rename to `client_secret.json`
-   - Place in `credentials/` directory
-
-3. **Get WordPress Application Password**:
-   - WordPress Admin → Users → Profile
-   - Scroll to "Application Passwords"
-   - Create new password → Copy it
-
-### Run the Application
-
-```bash
-# Run from project root
-python app/main.py
-```
-
-You'll see:
-```
-================================================================================
-SEO PUBLISHING SYSTEM - MVP v1.0
-================================================================================
-
-Automated Google Docs to WordPress Publishing
-with AI-Powered Project Configuration
-
-================================================================================
-
 [MAIN MENU]
 ----------------------------------------
 1. Publish Google Docs to WordPress
@@ -174,126 +203,16 @@ with AI-Powered Project Configuration
 ----------------------------------------
 ```
 
----
-
-## 📖 Usage Guide
-
-### 1. Configure a New Project
-
-```bash
-# Select option 2 from main menu
-python app/main.py
-> 2
-```
-
-The AI-powered wizard will guide you through:
-
-1. **Basic Info**: Project ID, name, WordPress URL, credentials
-2. **Image Settings**: Target width, quality, format, CSS classes
-3. **HTML Analysis**: Paste sample HTML → AI extracts patterns automatically
-
-**Example**: You paste this sample HTML:
-```html
-<p class="article-body" style="text-align: justify;">This is a paragraph.</p>
-<h2 class="section-header">Heading</h2>
-<strong>Bold text</strong>
-```
-
-AI generates transformation patterns:
-```json
-{
-  "patterns": [
-    {
-      "element_type": "p",
-      "source_pattern": "<p[^>]*>(.*?)</p>",
-      "target_pattern": "<p class=\"article-body\" style=\"text-align: justify;\">\\1</p>"
-    },
-    {
-      "element_type": "h2",
-      "source_pattern": "<h2[^>]*>(.*?)</h2>",
-      "target_pattern": "<h2 class=\"section-header\">\\1</h2>"
-    }
-  ]
-}
-```
-
-### 2. Publish Content
-
-```bash
-# Select option 1 from main menu
-python app/main.py
-> 1
-```
-
-**Steps**:
-1. Select configured project (or skip for no transformations)
-2. Enter Google Docs URL (any edit/view URL works)
-3. Watch the automation work:
-
-```
-[1/6] 📄 Converting Google Docs to HTML... ✓
-[2/6] 📝 Extracting post title... ✓
-[3/6] 🖼️  Processing images... ✓
-[4/6] ⬆️  Uploading images to WordPress... ✓
-[5/6] 🔄 Applying HTML transformations... ✓
-[6/6] 📤 Creating WordPress post... ✓
-
-✅ PUBLISHING COMPLETED SUCCESSFULLY!
-🔗 Post URL: https://your-site.com/your-post/
-```
-
-**First Time Publishing**: Browser opens for Google authentication → Grant access to Drive API → Token saved for future use
-
-### 3. Edit Project (Natural Language)
-
-```bash
-# Select option 3 from main menu
-python app/main.py
-> 3
-```
-
-**Natural Language Editing** (NEW! ✨):
-
-```
-Select project: dangbaiseongon
-Choose: 1. HTML transformation patterns
-Choose: 1. Modify with natural language
-
-Enter instruction: Make all h2 headings blue
-
-AI Preview:
-  <h2 class="section-header">\\1</h2>
-  →
-  <h2 class="section-header" style="color: blue;">\\1</h2>
-
-Save changes? (Y/n): y
-✓ Patterns updated!
-```
-
-**Examples of natural language instructions**:
-- "Make all h2 headings blue"
-- "Add margin-bottom: 20px to paragraphs"
-- "Make links open in new tab"
-- "Add class 'highlight' to all h3 headings"
-
-### 4. List All Projects
-
-```bash
-# Select option 4 from main menu
-python app/main.py
-> 4
-```
-
-Shows all configured projects with details:
-- Project ID and name
-- WordPress URL
-- Number of HTML patterns
-- Image width settings
-- Status (active/inactive)
+**Publishing Workflow (CLI):**
+1. Select option 1
+2. Choose project (or "No project" for defaults)
+3. Enter Google Docs URL
+4. Watch automated steps execute
+5. Get WordPress post URL
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Database Schema
 
@@ -327,22 +246,22 @@ Shows all configured projects with details:
 - published_at
 ```
 
-### Publishing Workflow (6 Steps)
+### Publishing Workflow
 
 ```
-Google Docs URL
+Google Docs URL (published to web)
     ↓
-[1] Convert to HTML (Google Drive API)
+[1] Convert to HTML
     ↓
-[2] Extract title & clean HTML (Remove H1 and content before)
+[2] Extract title & clean HTML
     ↓
 [3] Process images (Download & resize)
     ↓
-[4] Upload images to WordPress (Binary upload)
+[4] Upload images to WordPress
     ↓
 [5] Apply HTML transformations (Project-specific patterns)
     ↓
-[6] Create WordPress post (Draft with transformed HTML)
+[6] Create WordPress post (Draft)
     ↓
 Log to history & return post URL
 ```
@@ -351,26 +270,80 @@ Log to history & return post URL
 
 **Tools** (`src/tools/`):
 - `google_docs_converter.py` - Google Drive API integration
-- `image_processor.py` - Image download and resizing
+- `image_processor.py` - Image download and resizing (Pillow)
 - `html_transformer.py` - Pattern-based HTML transformation
 - `wordpress_uploader.py` - WordPress REST API client
 
 **Utilities** (`src/utils/`):
 - `html_extractor.py` - Title extraction and HTML cleaning
 - `pattern_engine.py` - Regex pattern application
-- `pattern_modifier.py` - AI-powered pattern modification (NEW!)
+- `pattern_modifier.py` - AI-powered pattern modification
 
 **Workflows** (`src/workflows/`):
 - `publishing_workflow.py` - Complete 6-step publishing pipeline
 
+**Database** (`src/database/`):
+- `project_manager.py` - CRUD operations for projects
+- `schema.sql` - Database schema definition
+
 ---
 
-## 🧪 Testing
+## AI Features
+
+### 1. HTML Pattern Generation
+
+Paste sample HTML → AI extracts patterns automatically
+
+**Example Input:**
+```html
+<p class="article-body" style="text-align: justify;">This is a paragraph.</p>
+<h2 class="section-header">Heading</h2>
+<strong>Bold text</strong>
+```
+
+**AI Generated Patterns:**
+```json
+{
+  "patterns": [
+    {
+      "element_type": "p",
+      "source_pattern": "<p[^>]*>(.*?)</p>",
+      "target_pattern": "<p class=\"article-body\" style=\"text-align: justify;\">\\1</p>"
+    },
+    {
+      "element_type": "h2",
+      "source_pattern": "<h2[^>]*>(.*?)</h2>",
+      "target_pattern": "<h2 class=\"section-header\">\\1</h2>"
+    }
+  ]
+}
+```
+
+### 2. Natural Language Pattern Editing
+
+Use plain English to modify patterns:
+
+**Examples:**
+- "Make all h2 headings blue"
+- "Add margin-bottom: 20px to paragraphs"
+- "Make links open in new tab"
+- "Add class 'highlight' to all h3 headings"
+- "Remove all styling from images"
+
+**How it works:**
+1. Select project in AI Pattern Editor
+2. Enter natural language instruction
+3. AI modifies patterns and shows preview
+4. Review changes
+5. Save to project
+
+---
+
+## Testing
 
 ### Run All Tests
 
 ```bash
-# Run from project root
 cd tests
 python -m pytest
 ```
@@ -391,21 +364,9 @@ python tests/test_workflow_integration.py
 python tests/test_pattern_modification.py
 ```
 
-### Test Results
-
-Current status: **All tests passing ✅**
-
-```
-test_database.py:             PASSED ✅
-test_pattern_engine.py:       PASSED ✅
-test_workflow_integration.py: PASSED ✅
-test_pattern_modification.py: PASSED ✅ (5/5 tests)
-test_edit_project.py:         PASSED ✅
-```
-
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "ANTHROPIC_API_KEY not found"
 - Ensure `.env` file exists with your API key
@@ -416,27 +377,31 @@ test_edit_project.py:         PASSED ✅
 - Set `WP_BASE_URL`, `WP_USERNAME`, `WP_APP_PASS` in `.env`
 
 ### "Failed to convert Google Docs"
-- Verify you have access to the Google Doc
-- Check `client_secret.json` is in `credentials/` directory
-- On first run, browser will open for authentication
+- **Option 1**: Use published Google Docs URL (ends with `/pub`)
+  - File → Share → Publish to web
+  - No authentication needed
+- **Option 2**: Use Google Drive API
+  - Set up OAuth credentials (`client_secret.json`)
+  - First run will open browser for authentication
 
 ### Images Not Processing
 - Check image URLs are accessible
 - Verify sufficient disk space for temp files
-- Check `data/images/` directories exist
+- Check `raw_images/` and `resized_images/` directories exist
 
 ### WordPress Authentication Failed
 - Verify WordPress REST API is enabled
 - Use **Application Password**, not regular password
 - Go to: WordPress → Users → Profile → Application Passwords
 
-### Import Errors
-- Ensure you're running from project root: `python app/main.py`
-- Check all dependencies installed: `pip install -r requirements.txt`
+### Streamlit App Not Loading
+- Make sure port 8501 is available
+- Check if another Streamlit instance is running
+- Try: `streamlit run app_streamlit.py --server.port 8502`
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
 ### Sensitive Files (git-ignored)
 
@@ -452,21 +417,25 @@ To share this project:
 1. Copy `.env` → `.env.example` and remove sensitive values
 2. Exclude `credentials/` and `data/` directories
 3. Share `.env.example` as template
+4. Document required credentials in handoff notes
 
 ---
 
-## 📊 Version History
+## Version History
 
-**v1.2.0** (2025-11-13) - Current
-- ✨ Added natural language pattern editing
-- 🏗️ Restructured codebase for clarity
-- 📚 Comprehensive documentation
-- ✅ Full test suite
+**v2.0.0** (2025-11-13) - Current
+- Added Streamlit web UI as primary interface
+- Improved navigation and UX (clean, professional design)
+- Enhanced AI pattern editor with visual feedback
+- Complete codebase cleanup (removed Railway/FastAPI)
+- Simplified architecture (local-first development)
+- Comprehensive documentation for team handoff
 
-**v1.1.0** (2025-11-12)
-- Added project editing feature
-- Fixed Google API connection issues
-- Comprehensive testing suite
+**v1.2.0** (2025-11-13)
+- Added natural language pattern editing
+- Restructured codebase for clarity
+- Comprehensive documentation
+- Full test suite
 
 **v1.0.0** (2025-11-11)
 - Initial MVP release
@@ -476,56 +445,36 @@ To share this project:
 
 ---
 
-## 🚀 Roadmap
+## Technology Stack
 
-### Completed
-- [x] Multi-project configuration system
-- [x] AI-powered HTML pattern analysis
-- [x] Natural language pattern editing
-- [x] Complete publishing workflow
-- [x] Image processing pipeline
-- [x] Publishing history tracking
-- [x] Comprehensive testing
-
-### Planned (Next Phase)
-- [ ] FastAPI REST API backend
-- [ ] Larksuite Bot integration
-- [ ] Lark Base table integration
-- [ ] Bulk processing capability
-- [ ] Web-based UI (Streamlit or React)
-- [ ] Analytics dashboard
-
-See [LARK_IMPLEMENTATION_PLAN.md](docs/LARK_IMPLEMENTATION_PLAN.md) for detailed future plans.
+- **Python 3.11+** - Core language
+- **Streamlit** - Web UI framework
+- **SQLite** - Local database
+- **Claude Sonnet 4.5** - AI model (Anthropic)
+- **Google Drive API** - Google Docs conversion (optional)
+- **WordPress REST API** - Publishing target
+- **BeautifulSoup** - HTML parsing
+- **Pillow** - Image processing
+- **Requests** - HTTP client
 
 ---
 
-## 📄 License
+## Support & Documentation
 
-Internal use only. Not for public distribution.
-
----
-
-## 👥 Support
+- **README.md** (this file) - Quick start and overview
+- **SETUP.md** - Detailed installation and configuration
+- **HANDOFF.md** - Developer guide and architecture details
+- **START_HERE.md** - Quick reference for common tasks
 
 For issues or questions:
-1. Check this README
+1. Check documentation files
 2. Review troubleshooting section
 3. Check test results for component-specific issues
 4. Review code comments for implementation details
 
 ---
 
-**Built with**:
-- Python 3.11+
-- Claude Sonnet 4.5 (AI model)
-- SQLite (database)
-- Google Drive API (Google Docs)
-- WordPress REST API (publishing)
-- BeautifulSoup (HTML parsing)
-- Pillow (image processing)
-
----
-
-**Version**: v1.2.0
+**Version**: v2.0.0
 **Last Updated**: 2025-11-13
-**Status**: Production Ready ✅
+**Status**: Production Ready - Local Development
+**Primary Interface**: Streamlit UI at http://localhost:8501
