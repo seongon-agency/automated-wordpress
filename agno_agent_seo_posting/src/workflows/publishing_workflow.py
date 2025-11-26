@@ -15,24 +15,30 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add project root to path for consistent imports
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-from database import get_project, log_publish
-from tools.google_docs_converter import google_docs_to_html
-from tools.image_processor import process_images_from_html
-from tools.html_transformer import transform_html
-from tools.wordpress_uploader import (
+from src.database import get_project, log_publish
+from src.tools.google_docs_converter import google_docs_to_html
+from src.tools.image_processor import process_images_from_html
+from src.tools.html_transformer import transform_html
+from src.tools.wordpress_uploader import (
     upload_images_batch,
     create_wordpress_post,
-    replace_image_urls_in_html
+    replace_image_urls_in_html,
+    extract_image_metadata_from_html,
+    replace_images_with_wordpress_captions
 )
-from utils.html_extractor import extract_title_from_html, clean_html_for_wordpress
+from src.tools.google_drive_uploader import upload_images_to_google_drive
+from src.utils.html_extractor import extract_title_from_html, clean_html_for_wordpress
 
 
 def execute_publishing_workflow(
     google_docs_url: str,
-    project_id: Optional[str] = None
+    project_id: Optional[str] = None,
+    main_keyword: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Execute the complete publishing workflow.
@@ -48,6 +54,7 @@ def execute_publishing_workflow(
     Args:
         google_docs_url: Published Google Docs URL
         project_id: Project ID (None = "no-project" mode, skip transformations)
+        main_keyword: Optional main keyword for image naming (if naming_method is "main_keyword")
 
     Returns:
         Dict with workflow results:
@@ -136,6 +143,12 @@ def execute_publishing_workflow(
         # STEP 3: Process images
         print("\n[3/6] 🖼️  Processing images...")
 
+        # Extract original image metadata (alt, width, height) from cleaned HTML
+        # This MUST happen BEFORE image processing, so we preserve Google Docs metadata
+        print("   📊 Extracting original image metadata from HTML...")
+        original_image_metadata = extract_image_metadata_from_html(cleaned_html)
+        print(f"   ✓ Extracted metadata for {len(original_image_metadata)} image(s)")
+
         # Use project image config or defaults
         if not image_configs:
             image_configs = {
@@ -148,7 +161,8 @@ def execute_publishing_workflow(
         image_result = process_images_from_html(
             cleaned_html,
             image_config=image_configs,
-            base_name=project_id or "image"
+            base_name=project_id or "image",
+            main_keyword=main_keyword or ""
         )
 
         if not image_result['success']:
@@ -157,9 +171,50 @@ def execute_publishing_workflow(
         processed_images = image_result.get('processed_images', [])
         print(f"   ✓ Processed {len(processed_images)} image(s)")
 
+        # STEP 3.5: Upload images to Google Drive (optional, non-blocking)
+        google_drive_folder = image_configs.get('google_drive_folder_url', '')
+        google_drive_result = None
+
+        if google_drive_folder and processed_images:
+            print("\n[3.5/7] 📁 Uploading images to Google Drive...")
+
+            try:
+                # Get resized image paths and filenames
+                resized_paths = [img['resized_path'] for img in processed_images]
+                image_filenames = [img['filename'] for img in processed_images]
+
+                google_drive_result = upload_images_to_google_drive(
+                    parent_folder_url=google_drive_folder,
+                    post_title=post_title,
+                    image_paths=resized_paths,
+                    image_filenames=image_filenames
+                )
+
+                if google_drive_result['success']:
+                    print(f"   ✓ Uploaded {google_drive_result['total_uploaded']} image(s) to Google Drive")
+                    print(f"   🔗 Folder: {google_drive_result.get('folder_url', 'N/A')}")
+                else:
+                    print(f"   ⚠️  Google Drive upload had issues: {google_drive_result.get('error', 'Unknown error')}")
+                    if google_drive_result.get('total_uploaded', 0) > 0:
+                        print(f"   ✓ Partially uploaded: {google_drive_result['total_uploaded']} image(s)")
+
+            except Exception as gdrive_error:
+                # Google Drive failure should NOT block the workflow
+                print(f"   ⚠️  Google Drive backup failed: {str(gdrive_error)}")
+                print(f"   ℹ️  Continuing with WordPress upload...")
+                google_drive_result = {
+                    'success': False,
+                    'error': str(gdrive_error)
+                }
+
+        elif google_drive_folder and not processed_images:
+            print("\n[3.5/7] 📁 Google Drive backup skipped (no images)")
+        # If google_drive_folder is not set, silently skip
+
         # STEP 4: Upload images to WordPress
-        print("\n[4/6] ⬆️  Uploading images to WordPress...")
+        print("\n[4/7] ⬆️  Uploading images to WordPress...")
         url_mapping = {}
+        enriched_metadata = []
 
         if processed_images:
             resized_paths = [img['resized_path'] for img in processed_images]
@@ -174,23 +229,82 @@ def execute_publishing_workflow(
                 app_password
             )
 
-            if upload_result['success']:
-                print(f"   ✓ Uploaded {len(upload_result['uploaded'])} image(s)")
-                url_mapping = upload_result['url_mapping']
-            else:
-                print(f"   ⚠️  Some images failed to upload: {len(upload_result['failed'])}")
-                # Continue anyway with successful uploads
-                url_mapping = upload_result['url_mapping']
+            # Report upload status
+            uploaded_count = len(upload_result['uploaded'])
+            failed_count = len(upload_result['failed'])
 
-                # Print failed uploads for debugging
+            if upload_result['success']:
+                print(f"   ✓ Uploaded {uploaded_count} image(s)")
+            else:
+                print(f"   ⚠️  Uploaded {uploaded_count} image(s), {failed_count} failed")
                 for failure in upload_result['failed']:
                     print(f"   ✗ Failed: {failure['image_path']}")
                     print(f"     Error: {failure['error']}")
+
+            # ALWAYS create URL mapping and enriched metadata for successful uploads
+            # This ensures captions work even when some images fail
+            if upload_result['uploaded']:
+                # CRITICAL: Create URL mapping from ORIGINAL URLs (Google Docs) to WordPress URLs
+                print("   🔗 Creating URL mapping from original URLs to WordPress URLs...")
+
+                # First, create reverse mappings: resized_path -> original_url and resized_path -> dimensions
+                resized_to_original_url = {}
+                resized_to_dimensions = {}
+                for processed_img in processed_images:
+                    resized_path = processed_img['resized_path']
+                    original_url = processed_img['original_url']
+                    dimensions = processed_img.get('dimensions', (image_configs.get('target_width', 800), 800))
+                    resized_to_original_url[resized_path] = original_url
+                    resized_to_dimensions[resized_path] = dimensions
+
+                # Process each uploaded image
+                print("   🔗 Enriching image metadata with WordPress data...")
+                for uploaded_img in upload_result['uploaded']:
+                    resized_path = uploaded_img['image_path']
+                    original_url = resized_to_original_url.get(resized_path, '')
+                    dimensions = resized_to_dimensions.get(resized_path, (image_configs.get('target_width', 800), 800))
+
+                    # Add to URL mapping
+                    if original_url:
+                        url_mapping[original_url] = uploaded_img['url']
+                        print(f"      {original_url[:60]}... → {uploaded_img['url']}")
+
+                    # Match metadata by original URL using PARTIAL matching
+                    original_meta = {}
+                    if original_url:
+                        # First try exact match
+                        original_meta = original_image_metadata.get(original_url, {})
+
+                        # If exact match fails, try partial matching
+                        if not original_meta:
+                            for meta_url, meta_data in original_image_metadata.items():
+                                if meta_url in original_url or original_url in meta_url:
+                                    original_meta = meta_data
+                                    print(f"      ✓ Partial URL match: {meta_url[:60]}...")
+                                    break
+
+                    if original_meta:
+                        print(f"      ✓ Matched metadata for: {original_url[:80]}...")
+                        print(f"         Alt text: '{original_meta.get('alt', '')[:80]}...'")
+                    else:
+                        print(f"      ⚠️  No metadata found for: {original_url[:80] if original_url else Path(resized_path).name}")
+
+                    # Create enriched metadata with WordPress data, original metadata, and ACTUAL resized dimensions
+                    enriched_metadata.append({
+                        'media_id': uploaded_img['media_id'],
+                        'url': uploaded_img['url'],
+                        'alt': original_meta.get('alt', ''),
+                        'width': dimensions[0],
+                        'height': dimensions[1],
+                        'original_filename': Path(resized_path).name
+                    })
+
+                print(f"   ✓ Enriched metadata for {len(enriched_metadata)} image(s)")
         else:
             print("   ℹ️  No images to upload")
 
         # STEP 5: Apply HTML transformations
-        print("\n[5/6] 🔄 Applying HTML transformations...")
+        print("\n[5/7] 🔄 Applying HTML transformations...")
 
         if html_configs and html_configs.get('patterns'):
             transform_result = transform_html(cleaned_html, html_configs)
@@ -205,16 +319,33 @@ def execute_publishing_workflow(
             print("   ℹ️  No transformations configured - using cleaned HTML")
             transformed_html = cleaned_html
 
-        # Replace image URLs with WordPress URLs
+        # CRITICAL: Replace image URLs FIRST (before caption generation)
+        # This is necessary because the HTML still has Google Docs URLs,
+        # but the caption generator needs WordPress URLs to match images
         if url_mapping:
             print("   🔗 Replacing image URLs with WordPress media URLs...")
-            final_html = replace_image_urls_in_html(transformed_html, url_mapping)
+            transformed_html = replace_image_urls_in_html(transformed_html, url_mapping)
             print(f"   ✓ Replaced {len(url_mapping)} image URL(s)")
+
+        # Now generate captions (if enabled) on the HTML with updated URLs
+        enable_auto_captions = image_configs.get('enable_auto_captions', True)
+
+        if enriched_metadata and enable_auto_captions:
+            print("   🎨 Generating WordPress caption shortcodes for images...")
+            final_html = replace_images_with_wordpress_captions(
+                transformed_html,
+                enriched_metadata,
+                target_width=image_configs.get('target_width', 1200),
+                max_caption_width=image_configs.get('max_caption_width')
+            )
+            print(f"   ✓ Generated {len(enriched_metadata)} caption shortcode(s)")
         else:
+            if not enable_auto_captions:
+                print("   ℹ️  Auto-captions disabled - images will use simple format")
             final_html = transformed_html
 
         # STEP 6: Create WordPress post
-        print("\n[6/6] 📤 Creating WordPress post...")
+        print("\n[6/7] 📤 Creating WordPress post...")
         post_result = create_wordpress_post(
             title=post_title,
             content=final_html,
@@ -268,10 +399,12 @@ def execute_publishing_workflow(
         print(f"\n📌 Post Title: {post_title}")
         print(f"🔗 Post URL: {post_result['post_url']}")
         print(f"🖼️  Images: {len(processed_images)} processed")
+        if google_drive_result and google_drive_result.get('folder_url'):
+            print(f"📁 Google Drive: {google_drive_result['folder_url']}")
         print(f"⏱️  Time: {execution_time:.2f}s")
         print("\n" + "="*80 + "\n")
 
-        return {
+        result = {
             "success": True,
             "post_url": post_result['post_url'],
             "edit_url": post_result.get('edit_url'),
@@ -281,6 +414,13 @@ def execute_publishing_workflow(
             "images_processed": len(processed_images),
             "execution_time": execution_time
         }
+
+        # Add Google Drive info if available
+        if google_drive_result and google_drive_result.get('folder_url'):
+            result['google_drive_folder_url'] = google_drive_result['folder_url']
+            result['google_drive_folder_name'] = google_drive_result.get('folder_name', '')
+
+        return result
 
     except Exception as e:
         execution_time = time.time() - start_time
@@ -312,5 +452,6 @@ def execute_publishing_workflow(
 execute_publishing_workflow.__annotations__ = {
     'google_docs_url': str,
     'project_id': Optional[str],
+    'main_keyword': Optional[str],
     'return': Dict[str, Any]
 }

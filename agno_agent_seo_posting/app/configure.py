@@ -72,6 +72,29 @@ Return ONLY a valid JSON object in this exact format (no markdown, no explanatio
   ]
 }}
 
+CRITICAL RULES (MUST FOLLOW):
+1. **<p> tags - Use MINIMAL patterns** with REGEX:
+   - Create ONE pattern for ALL <p> tags with "text-align:justify" or "text-align: justify" (case insensitive)
+   - Create ONE pattern for ALL <p> tags with "text-align:center" or "text-align: center" (case insensitive)
+   - For <p> tags containing <img>, ALWAYS set text-align to center in target_pattern
+   - Use regex like: <p[^>]*style="[^"]*text-align:\s*justify[^"]*"[^>]*>(.*?)</p>
+
+2. **<table> tags - ALWAYS set to full width**:
+   - Add style="width: 100%" to ALL table tags in target_pattern
+
+3. **<img> tags - Use generic src patterns**:
+   - DO NOT include specific src URL values in patterns
+   - Use generic regex: <img[^>]*(src="[^"]*")[^>]*> to match ANY image
+   - Use capture groups to preserve the src: (src="[^"]*")
+   - In target_pattern, use \\1 to preserve the captured src
+   - Example: source_pattern: <img[^>]*(src="[^"]*")[^>]*>, target_pattern: <img \\1 class="custom">
+
+4. **Use GENERAL regex patterns - minimize pattern count**:
+   - Don't create separate patterns for each variation
+   - Use [^>]* to match any attributes
+   - Use \\s* to match optional whitespace
+   - Example: ONE pattern <p[^>]*style="[^"]*text-align:\s*justify[^"]*"[^>]*> covers ALL justify paragraphs
+
 Important:
 - Use double backslashes (\\\\1) for capture groups
 - Preserve content with (.*?) in source_pattern

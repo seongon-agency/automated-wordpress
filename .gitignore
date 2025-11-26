@@ -144,6 +144,17 @@ ENV/
 env.bak/
 venv.bak/
 
+# Google OAuth credentials (sensitive data)
+**/credentials/
+**/token.json
+**/client_secret.json
+
+# WordPress SEO Publishing - temp files and databases
+**/raw_images/
+**/resized_images/
+**/clients.db
+**/seo_agent.db
+
 # Spyder project settings
 .spyderproject
 .spyproject
