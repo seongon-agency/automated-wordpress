@@ -58,7 +58,7 @@ import anthropic
 # ============================================
 
 st.set_page_config(
-    page_title="WordPress SEO Publisher",
+    page_title="Hệ Thống Đăng Bài WordPress",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -74,50 +74,50 @@ if 'current_page' not in st.session_state:
 # Sidebar - Navigation
 # ============================================
 
-st.sidebar.title("WordPress SEO Publisher")
-st.sidebar.caption("Local Development • AI-Powered")
+st.sidebar.title("Hệ Thống Đăng Bài WordPress")
+st.sidebar.caption("Phát triển nội bộ • Tích hợp AI")
 
 st.sidebar.markdown("")
 
 # Quick action button
-if st.sidebar.button("Quick Publish", type="primary", use_container_width=True):
+if st.sidebar.button("Đăng Bài Nhanh", type="primary", use_container_width=True):
     st.session_state.current_page = "Publish Content"
 
 st.sidebar.markdown("---")
 
 # Navigation sections
-st.sidebar.subheader("Overview")
-if st.sidebar.button("Dashboard", use_container_width=True,
+st.sidebar.subheader("Tổng Quan")
+if st.sidebar.button("Bảng Điều Khiển", use_container_width=True,
                       disabled=(st.session_state.current_page == "Home")):
     st.session_state.current_page = "Home"
 
 st.sidebar.markdown("")
-st.sidebar.subheader("Projects")
+st.sidebar.subheader("Dự Án")
 col1, col2 = st.sidebar.columns(2)
 with col1:
-    if st.button("View", use_container_width=True, key="view_projects"):
+    if st.button("Xem", use_container_width=True, key="view_projects"):
         st.session_state.current_page = "Projects"
 with col2:
-    if st.button("New", use_container_width=True, key="new_project"):
+    if st.button("Tạo Mới", use_container_width=True, key="new_project"):
         st.session_state.current_page = "Create Project"
 
-if st.sidebar.button("Edit Project Settings", use_container_width=True):
+if st.sidebar.button("Chỉnh Sửa Cài Đặt Dự Án", use_container_width=True):
     st.session_state.current_page = "Edit Project"
 
 st.sidebar.markdown("")
-st.sidebar.subheader("AI Configuration")
-if st.sidebar.button("Edit HTML Patterns (Natural Language)", use_container_width=True):
+st.sidebar.subheader("Cấu Hình AI")
+if st.sidebar.button("Sửa HTML Patterns (Ngôn Ngữ Tự Nhiên)", use_container_width=True):
     st.session_state.current_page = "AI Pattern Editor"
-if st.sidebar.button("Scan & Generate Patterns", use_container_width=True):
+if st.sidebar.button("Quét & Tạo Patterns", use_container_width=True):
     st.session_state.current_page = "Scan HTML Template"
 
 st.sidebar.markdown("")
-st.sidebar.subheader("Publishing")
-if st.sidebar.button("Publish Single Content", use_container_width=True):
+st.sidebar.subheader("Đăng Bài")
+if st.sidebar.button("Đăng Một Bài", use_container_width=True):
     st.session_state.current_page = "Publish Content"
-if st.sidebar.button("Batch Publish (Multiple)", use_container_width=True):
+if st.sidebar.button("Đăng Hàng Loạt", use_container_width=True):
     st.session_state.current_page = "Batch Publish"
-if st.sidebar.button("View Publishing History", use_container_width=True):
+if st.sidebar.button("Xem Lịch Sử Đăng Bài", use_container_width=True):
     st.session_state.current_page = "Publishing History"
 
 st.sidebar.markdown("---")
@@ -127,15 +127,15 @@ try:
     projects = list_projects(status='all')
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        st.metric("Projects", len(projects))
+        st.metric("Dự Án", len(projects))
     with col2:
-        st.metric("Status", "Ready")
+        st.metric("Trạng Thái", "Sẵn Sàng")
 except:
     pass
 
 st.sidebar.markdown("---")
-st.sidebar.caption("**Tip:** Use Quick Publish for fast access")
-st.sidebar.caption("**Tech:** SQLite • Python • Claude AI")
+st.sidebar.caption("**Mẹo:** Dùng Đăng Bài Nhanh để truy cập nhanh")
+st.sidebar.caption("**Công nghệ:** Supabase • Python • Claude AI")
 
 # Set page from session state
 page = st.session_state.current_page
@@ -145,42 +145,42 @@ page = st.session_state.current_page
 # ============================================
 
 if page == "Home":
-    st.title("WordPress SEO Publishing System")
-    st.markdown("### Local Development Version")
+    st.title("Hệ Thống Đăng Bài SEO WordPress")
+    st.markdown("### Phiên Bản Phát Triển Nội Bộ")
     st.markdown("---")
 
     st.markdown("""
-    ## Welcome!
+    ## Chào Mừng!
 
-    This is the **local development version** of the WordPress SEO Publishing System.
+    Đây là **phiên bản phát triển nội bộ** của Hệ Thống Đăng Bài SEO WordPress.
 
-    ### System Features:
+    ### Tính Năng Hệ Thống:
 
-    1. **Project Management**
-       - Create and manage WordPress projects
-       - Each project stores WordPress credentials and HTML transformation patterns
-       - Supports multiple WordPress sites
+    1. **Quản Lý Dự Án**
+       - Tạo và quản lý các dự án WordPress
+       - Mỗi dự án lưu thông tin đăng nhập WordPress và các mẫu chuyển đổi HTML
+       - Hỗ trợ nhiều trang WordPress
 
-    2. **Content Publishing**
-       - Publish Google Docs to WordPress
-       - Automatic HTML transformation based on project templates
-       - Image processing and upload to WordPress media library
-       - Creates draft posts by default for safety
+    2. **Đăng Nội Dung**
+       - Đăng Google Docs lên WordPress
+       - Tự động chuyển đổi HTML theo mẫu dự án
+       - Xử lý và tải ảnh lên thư viện media WordPress
+       - Tạo bài viết nháp theo mặc định để an toàn
 
-    3. **Complete Workflow**
-       - Convert Google Docs → HTML
-       - Process images (download, resize, upload)
-       - Apply HTML transformations
-       - Publish to WordPress
-       - Track publishing history
+    3. **Quy Trình Hoàn Chỉnh**
+       - Chuyển đổi Google Docs → HTML
+       - Xử lý ảnh (tải xuống, thay đổi kích thước, tải lên)
+       - Áp dụng chuyển đổi HTML
+       - Đăng lên WordPress
+       - Theo dõi lịch sử đăng bài
 
-    ### Quick Start:
+    ### Bắt Đầu Nhanh:
 
-    1. **Setup Google OAuth** - Place `client_secret.json` in `credentials/` folder
-    2. **Create a Project** - Add your WordPress site details
-    3. **Prepare Content** - Write content in Google Docs
-    4. **Publish** - Select project and paste any Google Docs URL (edit/view/published)
-    5. **Done!** - Get the WordPress post URL
+    1. **Cài Đặt Google OAuth** - Đặt file `client_secret.json` vào thư mục `credentials/`
+    2. **Tạo Dự Án** - Thêm thông tin trang WordPress của bạn
+    3. **Chuẩn Bị Nội Dung** - Viết nội dung trong Google Docs
+    4. **Đăng Bài** - Chọn dự án và dán URL Google Docs (edit/view/published)
+    5. **Hoàn Tất!** - Nhận link bài viết WordPress
 
     ---
     """)
@@ -191,26 +191,26 @@ if page == "Home":
     with col1:
         try:
             projects = list_projects(status='all')
-            st.metric("Total Projects", len(projects))
+            st.metric("Tổng Số Dự Án", len(projects))
         except:
-            st.metric("Total Projects", "0")
+            st.metric("Tổng Số Dự Án", "0")
 
     with col2:
-        st.metric("System Status", "Ready")
+        st.metric("Trạng Thái Hệ Thống", "Sẵn Sàng")
 
     with col3:
-        st.metric("Version", "1.0.0")
+        st.metric("Phiên Bản", "1.0.0")
 
     st.markdown("---")
 
-    st.info("**Use the sidebar to navigate** between pages")
+    st.info("**Sử dụng thanh bên trái để điều hướng** giữa các trang")
 
 # ============================================
 # Page: Projects
 # ============================================
 
 elif page == "Projects":
-    st.title("Projects")
+    st.title("Danh Sách Dự Án")
     st.markdown("---")
 
     # Fetch all projects
@@ -218,66 +218,66 @@ elif page == "Projects":
         projects = list_projects(status='all')
 
         if projects:
-            st.success(f"Found {len(projects)} project(s)")
+            st.success(f"Tìm thấy {len(projects)} dự án")
 
             for project in projects:
                 with st.expander(f"{project['project_name']} ({project['project_id']})"):
                     col1, col2 = st.columns([3, 1])
 
                     with col1:
-                        st.markdown(f"**Project ID:** `{project['project_id']}`")
-                        st.markdown(f"**WordPress URL:** {project['wordpress_url']}")
-                        st.markdown(f"**Username:** {project['wordpress_username']}")
-                        st.markdown(f"**Status:** {project['status']}")
-                        st.markdown(f"**Created:** {project.get('created_at', 'N/A')}")
+                        st.markdown(f"**ID Dự Án:** `{project['project_id']}`")
+                        st.markdown(f"**URL WordPress:** {project['wordpress_url']}")
+                        st.markdown(f"**Tên Đăng Nhập:** {project['wordpress_username']}")
+                        st.markdown(f"**Trạng Thái:** {project['status']}")
+                        st.markdown(f"**Ngày Tạo:** {project.get('created_at', 'N/A')}")
 
                         # Show HTML patterns count
                         html_configs = project.get('html_configs')
                         if html_configs and html_configs.get('patterns'):
-                            st.markdown(f"**HTML Patterns:** {len(html_configs['patterns'])} configured")
+                            st.markdown(f"**HTML Patterns:** {len(html_configs['patterns'])} đã cấu hình")
                         else:
-                            st.markdown("**HTML Patterns:** None configured")
+                            st.markdown("**HTML Patterns:** Chưa cấu hình")
 
                         # Show image config
                         image_configs = project.get('image_configs')
                         if image_configs:
-                            st.markdown(f"**Image Width:** {image_configs.get('target_width', 800)}px")
-                            st.markdown(f"**Image Quality:** {image_configs.get('image_quality', 92)}")
+                            st.markdown(f"**Chiều Rộng Ảnh:** {image_configs.get('target_width', 800)}px")
+                            st.markdown(f"**Chất Lượng Ảnh:** {image_configs.get('image_quality', 92)}")
                         else:
-                            st.markdown("**Image Settings:** Using defaults")
+                            st.markdown("**Cài Đặt Ảnh:** Sử dụng mặc định")
 
                     with col2:
-                        if st.button("Delete", key=f"del_{project['project_id']}"):
+                        if st.button("Xóa", key=f"del_{project['project_id']}"):
                             try:
                                 delete_project(project['project_id'])
-                                st.success("Project deleted!")
+                                st.success("Đã xóa dự án!")
                                 st.rerun()
                             except Exception as e:
-                                st.error(f"Failed to delete: {e}")
+                                st.error(f"Xóa thất bại: {e}")
 
         else:
-            st.info("No projects found. Create your first project!")
+            st.info("Không tìm thấy dự án nào. Hãy tạo dự án đầu tiên!")
 
     except Exception as e:
-        st.error(f"Error loading projects: {e}")
+        st.error(f"Lỗi khi tải dự án: {e}")
 
 # ============================================
 # Page: Create Project
 # ============================================
 
 elif page == "Create Project":
-    st.title("Create New Project")
+    st.title("Tạo Dự Án Mới")
     st.markdown("---")
 
     st.markdown("""
-    ### What is a Project?
+    ### Dự Án Là Gì?
 
-    A **project** represents a WordPress site where you'll publish content. Each project stores:
-    - WordPress site URL and credentials
-    - HTML transformation patterns (optional)
-    - Image processing settings (optional)
+    Một **dự án** đại diện cho một trang WordPress nơi bạn sẽ đăng nội dung. Mỗi dự án lưu trữ:
+    - URL trang WordPress và thông tin đăng nhập
+    - Các mẫu chuyển đổi HTML (tùy chọn)
+    - Cài đặt xử lý ảnh (tùy chọn)
 
-    Once configured, you can publish multiple articles to the same project without reconfiguring.
+    Sau khi cấu hình, bạn có thể đăng nhiều bài viết lên cùng một dự án mà không cần cấu hình lại.
     """)
 
     st.markdown("---")
@@ -285,115 +285,115 @@ elif page == "Create Project":
     # Image resize method selection OUTSIDE form so it updates immediately
     # Initialize session state for resize method if not set
     if 'create_resize_method' not in st.session_state:
-        st.session_state.create_resize_method = "Fixed Width"
+        st.session_state.create_resize_method = "Chiều Rộng Cố Định"
 
-    st.markdown("### Image Resizing Method")
-    resize_options = ["Fixed Width", "Google Docs Original Size", "No Resize (Original Quality)"]
+    st.markdown("### Phương Thức Thay Đổi Kích Thước Ảnh")
+    resize_options = ["Chiều Rộng Cố Định", "Kích Thước Gốc Google Docs", "Không Thay Đổi (Chất Lượng Gốc)"]
     current_index = resize_options.index(st.session_state.create_resize_method) if st.session_state.create_resize_method in resize_options else 0
     resize_method = st.radio(
-        "Select how images should be resized",
+        "Chọn cách thay đổi kích thước ảnh",
         options=resize_options,
         index=current_index,
-        help="Fixed Width: Resize all images to a specific width. Google Docs Original: Use dimensions from Google Docs. No Resize: Upload original images without any processing (best quality).",
+        help="Chiều Rộng Cố Định: Thay đổi kích thước tất cả ảnh theo chiều rộng cụ thể. Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc không xử lý (chất lượng tốt nhất).",
         key="create_resize_method_selector"
     )
     # Update session state
     st.session_state.create_resize_method = resize_method
 
     with st.form("create_project_form"):
-        st.markdown("### Basic Information")
+        st.markdown("### Thông Tin Cơ Bản")
 
         project_id = st.text_input(
-            "Project ID *",
-            placeholder="e.g., my_blog_2024",
-            help="Unique identifier (lowercase, underscores only). This cannot be changed later."
+            "ID Dự Án *",
+            placeholder="vd: blog_cua_toi_2024",
+            help="Định danh duy nhất (chữ thường, chỉ dùng gạch dưới). Không thể thay đổi sau khi tạo."
         )
 
         project_name = st.text_input(
-            "Project Name *",
-            placeholder="e.g., My Awesome Blog",
-            help="Display name for this project"
+            "Tên Dự Án *",
+            placeholder="vd: Blog Tuyệt Vời Của Tôi",
+            help="Tên hiển thị cho dự án này"
         )
 
-        st.markdown("### WordPress Configuration")
+        st.markdown("### Cấu Hình WordPress")
 
         wp_url = st.text_input(
-            "WordPress Site URL *",
-            placeholder="https://your-wordpress-site.com",
-            help="Full URL to your WordPress site (no trailing slash)"
+            "URL Trang WordPress *",
+            placeholder="https://trang-wordpress-cua-ban.com",
+            help="URL đầy đủ đến trang WordPress của bạn (không có dấu / ở cuối)"
         )
 
         wp_username = st.text_input(
-            "WordPress Username *",
+            "Tên Đăng Nhập WordPress *",
             placeholder="admin",
-            help="Your WordPress username"
+            help="Tên đăng nhập WordPress của bạn"
         )
 
         wp_password = st.text_input(
-            "WordPress Application Password *",
+            "Mật Khẩu Ứng Dụng WordPress *",
             type="password",
             placeholder="xxxx xxxx xxxx xxxx",
-            help="NOT your regular password! Get from: WordPress Admin → Users → Profile → Application Passwords"
+            help="KHÔNG phải mật khẩu thông thường! Lấy từ: WordPress Admin → Users → Profile → Application Passwords"
         )
 
-        st.markdown("### Image Settings (Optional)")
+        st.markdown("### Cài Đặt Ảnh (Tùy Chọn)")
 
         # Show different settings based on resize method from session state
-        if st.session_state.create_resize_method == "Fixed Width":
-            st.markdown("#### Fixed Width Settings")
+        if st.session_state.create_resize_method == "Chiều Rộng Cố Định":
+            st.markdown("#### Cài Đặt Chiều Rộng Cố Định")
             col1, col2 = st.columns(2)
 
             with col1:
                 image_width = st.number_input(
-                    "Target Image Width (px)",
+                    "Chiều Rộng Ảnh Mục Tiêu (px)",
                     min_value=100,
                     max_value=2000,
                     value=800,
                     key="create_fixed_width",
-                    help="Images will be resized to this width while maintaining aspect ratio"
+                    help="Ảnh sẽ được thay đổi kích thước theo chiều rộng này, giữ nguyên tỷ lệ"
                 )
 
                 image_quality = st.slider(
-                    "Image Quality (%)",
+                    "Chất Lượng Ảnh (%)",
                     min_value=50,
                     max_value=100,
                     value=92,
                     key="create_fixed_quality",
-                    help="Higher = better quality but larger file size"
+                    help="Cao hơn = chất lượng tốt hơn nhưng file lớn hơn"
                 )
 
             with col2:
                 image_format = st.selectbox(
-                    "Image Format",
+                    "Định Dạng Ảnh",
                     options=["JPEG", "PNG", "WEBP"],
                     index=0,
                     key="create_fixed_format",
-                    help="Output format for processed images"
+                    help="Định dạng đầu ra cho ảnh đã xử lý"
                 )
 
-        elif st.session_state.create_resize_method == "Google Docs Original Size":
-            st.markdown("#### Google Docs Original Size Settings")
-            st.info("🎯 Images will be resized to their exact dimensions from Google Docs (width and height from <img> tags)")
+        elif st.session_state.create_resize_method == "Kích Thước Gốc Google Docs":
+            st.markdown("#### Cài Đặt Kích Thước Gốc Google Docs")
+            st.info("🎯 Ảnh sẽ được thay đổi kích thước theo đúng kích thước từ Google Docs (chiều rộng và chiều cao từ thẻ <img>)")
 
             col1, col2 = st.columns(2)
 
             with col1:
                 image_quality = st.slider(
-                    "Image Quality (%)",
+                    "Chất Lượng Ảnh (%)",
                     min_value=50,
                     max_value=100,
                     value=92,
                     key="create_gdocs_quality",
-                    help="Higher = better quality but larger file size"
+                    help="Cao hơn = chất lượng tốt hơn nhưng file lớn hơn"
                 )
 
             with col2:
                 image_format = st.selectbox(
-                    "Image Format",
+                    "Định Dạng Ảnh",
                     options=["JPEG", "PNG", "WEBP"],
                     index=0,
                     key="create_gdocs_format",
-                    help="Output format for processed images"
+                    help="Định dạng đầu ra cho ảnh đã xử lý"
                 )
 
             # Set default width for backend (not used in google_docs_original mode)
@@ -401,92 +401,92 @@ elif page == "Create Project":
 
         else:
             # No Resize (Original Quality)
-            st.markdown("#### Original Quality Settings")
-            st.success("✨ Images will be uploaded exactly as they are from Google Docs - no resizing, no re-encoding. Best quality!")
-            st.info("Note: Original images may be large. Make sure your WordPress can handle them.")
+            st.markdown("#### Cài Đặt Chất Lượng Gốc")
+            st.success("✨ Ảnh sẽ được tải lên đúng như trong Google Docs - không thay đổi kích thước, không nén lại. Chất lượng tốt nhất!")
+            st.info("Lưu ý: Ảnh gốc có thể lớn. Đảm bảo WordPress của bạn có thể xử lý được.")
 
             # Set defaults (not used in no_resize mode)
             image_width = 800
             image_quality = 100
             image_format = "PNG"
 
-        st.markdown("### Image Naming")
+        st.markdown("### Đặt Tên Ảnh")
 
         naming_method = st.selectbox(
-            "Image Naming Method",
-            options=["Default (project_name)", "Alt Text Based", "Main Keyword Based"],
+            "Phương Thức Đặt Tên Ảnh",
+            options=["Mặc Định (tên_dự_án)", "Theo Alt Text", "Theo Từ Khóa Chính"],
             index=0,
             key="create_naming_method",
-            help="How to name downloaded images"
+            help="Cách đặt tên cho ảnh tải xuống"
         )
 
-        if naming_method == "Alt Text Based":
-            st.info("📝 Images will be named using the first N words of their alt text (slug format). Images without alt text will be named 'unnamed-image-1', 'unnamed-image-2', etc.")
+        if naming_method == "Theo Alt Text":
+            st.info("📝 Ảnh sẽ được đặt tên bằng N từ đầu tiên của alt text (định dạng slug). Ảnh không có alt text sẽ được đặt tên 'unnamed-image-1', 'unnamed-image-2', v.v.")
             alt_text_words = st.number_input(
-                "Number of words from alt text",
+                "Số từ từ alt text",
                 min_value=1,
                 max_value=20,
                 value=5,
                 key="create_alt_text_words",
-                help="How many words from the alt text to use for the filename"
+                help="Số từ từ alt text dùng làm tên file"
             )
-        elif naming_method == "Main Keyword Based":
-            st.info("🔑 Images will be named using a main keyword you provide when publishing (e.g., 'main-keyword-01', 'main-keyword-02')")
+        elif naming_method == "Theo Từ Khóa Chính":
+            st.info("🔑 Ảnh sẽ được đặt tên bằng từ khóa chính bạn cung cấp khi đăng bài (vd: 'tu-khoa-chinh-01', 'tu-khoa-chinh-02')")
             alt_text_words = 5  # default, not used
         else:
-            st.info("📁 Images will be named using the project ID (e.g., 'projectname_1', 'projectname_2')")
+            st.info("📁 Ảnh sẽ được đặt tên bằng ID dự án (vd: 'ten_du_an_1', 'ten_du_an_2')")
             alt_text_words = 5  # default, not used
 
-        st.markdown("### Caption Options")
+        st.markdown("### Tùy Chọn Caption")
 
         enable_auto_captions = st.checkbox(
-            "Enable Automatic WordPress Captions",
+            "Bật Caption WordPress Tự Động",
             value=True,
-            help="Automatically wrap images with WordPress [caption] shortcodes. Disable this if you want to control caption formatting with HTML patterns."
+            help="Tự động bọc ảnh với shortcode [caption] của WordPress. Tắt nếu bạn muốn kiểm soát định dạng caption bằng HTML patterns."
         )
 
-        st.markdown("### Google Drive Backup (Optional)")
+        st.markdown("### Sao Lưu Google Drive (Tùy Chọn)")
 
         google_drive_folder_url = st.text_input(
-            "Google Drive Folder URL",
+            "URL Thư Mục Google Drive",
             placeholder="https://drive.google.com/drive/folders/...",
-            help="Optional: Paste a Google Drive folder URL to automatically backup images. A subfolder will be created for each post."
+            help="Tùy chọn: Dán URL thư mục Google Drive để tự động sao lưu ảnh. Một thư mục con sẽ được tạo cho mỗi bài viết."
         )
 
         if google_drive_folder_url:
-            st.info("📁 Images will be backed up to Google Drive before WordPress upload. A subfolder named after the post title will be created.")
+            st.info("📁 Ảnh sẽ được sao lưu lên Google Drive trước khi tải lên WordPress. Một thư mục con được đặt tên theo tiêu đề bài viết sẽ được tạo.")
 
-        st.markdown("### Notes (Optional)")
+        st.markdown("### Ghi Chú (Tùy Chọn)")
 
         notes = st.text_area(
-            "Project Notes",
-            placeholder="Any notes about this project...",
-            help="Optional notes for reference"
+            "Ghi Chú Dự Án",
+            placeholder="Ghi chú về dự án này...",
+            help="Ghi chú tùy chọn để tham khảo"
         )
 
         st.markdown("---")
-        submit = st.form_submit_button("Create Project", type="primary", use_container_width=True)
+        submit = st.form_submit_button("Tạo Dự Án", type="primary", use_container_width=True)
 
         if submit:
             # Validation
             if not all([project_id, project_name, wp_url, wp_username, wp_password]):
-                st.error("Please fill in all required fields (marked with *)")
+                st.error("Vui lòng điền đầy đủ các trường bắt buộc (đánh dấu *)")
             else:
                 try:
                     # Prepare image configs
                     # Convert UI label to backend key (from session state)
-                    if st.session_state.create_resize_method == "Fixed Width":
+                    if st.session_state.create_resize_method == "Chiều Rộng Cố Định":
                         resize_method_key = "fixed_width"
-                    elif st.session_state.create_resize_method == "Google Docs Original Size":
+                    elif st.session_state.create_resize_method == "Kích Thước Gốc Google Docs":
                         resize_method_key = "google_docs_original"
                     else:
                         resize_method_key = "no_resize"
 
                     # Convert naming method to backend key
                     naming_method_key = "default"
-                    if naming_method == "Alt Text Based":
+                    if naming_method == "Theo Alt Text":
                         naming_method_key = "alt_text"
-                    elif naming_method == "Main Keyword Based":
+                    elif naming_method == "Theo Từ Khóa Chính":
                         naming_method_key = "main_keyword"
 
                     image_configs = {
@@ -501,7 +501,7 @@ elif page == "Create Project":
                     }
 
                     # Create project
-                    with st.spinner("Creating project..."):
+                    with st.spinner("Đang tạo dự án..."):
                         result = create_project(
                             project_id=project_id,
                             project_name=project_name,
@@ -512,27 +512,27 @@ elif page == "Create Project":
                             notes=notes if notes else None
                         )
 
-                    st.success("Project created successfully!")
-                    st.info("You can now publish content to this project. Go to 'Publish Content' page.")
+                    st.success("Tạo dự án thành công!")
+                    st.info("Bạn có thể đăng nội dung lên dự án này. Đi đến trang 'Đăng Một Bài'.")
 
                     # Show summary
                     st.json(result)
 
                 except Exception as e:
-                    st.error(f"Failed to create project: {e}")
+                    st.error(f"Tạo dự án thất bại: {e}")
 
 # ============================================
 # Page: Edit Project
 # ============================================
 
 elif page == "Edit Project":
-    st.title("Edit Project")
+    st.title("Chỉnh Sửa Dự Án")
     st.markdown("---")
 
     st.markdown("""
-    ### Update Project Settings
+    ### Cập Nhật Cài Đặt Dự Án
 
-    Modify WordPress credentials, image settings, or other project configuration.
+    Chỉnh sửa thông tin đăng nhập WordPress, cài đặt ảnh, hoặc các cấu hình dự án khác.
     """)
 
     st.markdown("---")
@@ -542,15 +542,15 @@ elif page == "Edit Project":
         projects = list_projects(status='all')
 
         if not projects:
-            st.warning("No projects found. Please create a project first.")
+            st.warning("Không tìm thấy dự án. Vui lòng tạo dự án trước.")
         else:
             # Select project to edit
             project_options = {f"{p['project_name']} ({p['project_id']})": p['project_id'] for p in projects}
 
             selected_display = st.selectbox(
-                "Select Project to Edit",
+                "Chọn Dự Án Để Chỉnh Sửa",
                 options=list(project_options.keys()),
-                help="Choose which project to modify"
+                help="Chọn dự án cần chỉnh sửa"
             )
             selected_project_id = project_options[selected_display]
 
@@ -567,7 +567,7 @@ elif page == "Edit Project":
                     del st.session_state.edit_naming_method_state
 
             st.markdown("---")
-            st.markdown(f"### Editing: **{current_project['project_name']}**")
+            st.markdown(f"### Đang Chỉnh Sửa: **{current_project['project_name']}**")
 
             # Image resize method selection OUTSIDE form so it updates immediately
             current_image_config = current_project.get('image_configs') or {}
@@ -575,156 +575,156 @@ elif page == "Edit Project":
 
             # Map backend key to UI label
             resize_method_map = {
-                'fixed_width': 'Fixed Width',
-                'google_docs_original': 'Google Docs Original Size',
-                'no_resize': 'No Resize (Original Quality)'
+                'fixed_width': 'Chiều Rộng Cố Định',
+                'google_docs_original': 'Kích Thước Gốc Google Docs',
+                'no_resize': 'Không Thay Đổi (Chất Lượng Gốc)'
             }
-            current_resize_method_label = resize_method_map.get(current_resize_method, 'Fixed Width')
+            current_resize_method_label = resize_method_map.get(current_resize_method, 'Chiều Rộng Cố Định')
 
             # Initialize session state for resize method if not set
             if 'edit_resize_method' not in st.session_state:
                 st.session_state.edit_resize_method = current_resize_method_label
 
-            st.markdown("#### Image Resizing Method")
-            edit_resize_options = ["Fixed Width", "Google Docs Original Size", "No Resize (Original Quality)"]
+            st.markdown("#### Phương Thức Thay Đổi Kích Thước Ảnh")
+            edit_resize_options = ["Chiều Rộng Cố Định", "Kích Thước Gốc Google Docs", "Không Thay Đổi (Chất Lượng Gốc)"]
             current_edit_index = edit_resize_options.index(st.session_state.edit_resize_method) if st.session_state.edit_resize_method in edit_resize_options else 0
             new_resize_method = st.radio(
-                "Select how images should be resized",
+                "Chọn cách thay đổi kích thước ảnh",
                 options=edit_resize_options,
                 index=current_edit_index,
-                help="Fixed Width: Resize to specific width. Google Docs Original: Use dimensions from Google Docs. No Resize: Upload original images (best quality).",
+                help="Chiều Rộng Cố Định: Thay đổi theo chiều rộng cụ thể. Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc (chất lượng tốt nhất).",
                 key="resize_method_selector"
             )
             # Update session state
             st.session_state.edit_resize_method = new_resize_method
 
             # Image naming method selection OUTSIDE form so it updates immediately
-            st.markdown("#### Image Naming Method")
+            st.markdown("#### Phương Thức Đặt Tên Ảnh")
 
             # Get current naming method from database
             current_naming_method = current_image_config.get('naming_method', 'default')
 
             # Map backend key to UI label
             naming_method_map = {
-                'default': 'Default (project_name)',
-                'alt_text': 'Alt Text Based',
-                'main_keyword': 'Main Keyword Based'
+                'default': 'Mặc Định (tên_dự_án)',
+                'alt_text': 'Theo Alt Text',
+                'main_keyword': 'Theo Từ Khóa Chính'
             }
-            current_naming_method_label = naming_method_map.get(current_naming_method, 'Default (project_name)')
+            current_naming_method_label = naming_method_map.get(current_naming_method, 'Mặc Định (tên_dự_án)')
 
             # Initialize session state for naming method if not set
             if 'edit_naming_method_state' not in st.session_state:
                 st.session_state.edit_naming_method_state = current_naming_method_label
 
-            edit_naming_options = ["Default (project_name)", "Alt Text Based", "Main Keyword Based"]
+            edit_naming_options = ["Mặc Định (tên_dự_án)", "Theo Alt Text", "Theo Từ Khóa Chính"]
             current_naming_index = edit_naming_options.index(st.session_state.edit_naming_method_state) if st.session_state.edit_naming_method_state in edit_naming_options else 0
 
             new_naming_method_outside = st.radio(
-                "Select how images should be named",
+                "Chọn cách đặt tên ảnh",
                 options=edit_naming_options,
                 index=current_naming_index,
-                help="Default: Uses project name. Alt Text: Uses image alt text. Main Keyword: You provide a keyword when publishing.",
+                help="Mặc Định: Sử dụng tên dự án. Theo Alt Text: Sử dụng alt text của ảnh. Theo Từ Khóa Chính: Bạn cung cấp từ khóa khi đăng bài.",
                 key="naming_method_selector"
             )
             # Update session state
             st.session_state.edit_naming_method_state = new_naming_method_outside
 
             # Show info based on selection
-            if new_naming_method_outside == "Alt Text Based":
-                st.info("📝 Images will be named using the first N words of their alt text (slug format).")
-            elif new_naming_method_outside == "Main Keyword Based":
-                st.info("🔑 Images will be named using a main keyword you provide when publishing (e.g., 'main-keyword-01', 'main-keyword-02')")
+            if new_naming_method_outside == "Theo Alt Text":
+                st.info("📝 Ảnh sẽ được đặt tên bằng N từ đầu tiên của alt text (định dạng slug).")
+            elif new_naming_method_outside == "Theo Từ Khóa Chính":
+                st.info("🔑 Ảnh sẽ được đặt tên bằng từ khóa chính bạn cung cấp khi đăng bài (vd: 'tu-khoa-chinh-01', 'tu-khoa-chinh-02')")
             else:
-                st.info("📁 Images will be named using the project ID (e.g., 'projectname_1', 'projectname_2')")
+                st.info("📁 Ảnh sẽ được đặt tên bằng ID dự án (vd: 'ten_du_an_1', 'ten_du_an_2')")
 
             with st.form("edit_project_form"):
-                st.markdown("#### Basic Information")
+                st.markdown("#### Thông Tin Cơ Bản")
 
                 new_project_name = st.text_input(
-                    "Project Name",
+                    "Tên Dự Án",
                     value=current_project['project_name'],
-                    help="Display name for this project"
+                    help="Tên hiển thị cho dự án này"
                 )
 
-                st.markdown("#### WordPress Configuration")
+                st.markdown("#### Cấu Hình WordPress")
 
                 new_wp_url = st.text_input(
-                    "WordPress Site URL",
+                    "URL Trang WordPress",
                     value=current_project['wordpress_url'],
-                    help="Full URL to your WordPress site"
+                    help="URL đầy đủ đến trang WordPress của bạn"
                 )
 
                 new_wp_username = st.text_input(
-                    "WordPress Username",
+                    "Tên Đăng Nhập WordPress",
                     value=current_project['wordpress_username'],
-                    help="Your WordPress username"
+                    help="Tên đăng nhập WordPress của bạn"
                 )
 
                 new_wp_password = st.text_input(
-                    "WordPress Application Password",
+                    "Mật Khẩu Ứng Dụng WordPress",
                     type="password",
-                    placeholder="Leave empty to keep current password",
-                    help="Enter new password or leave empty to keep existing"
+                    placeholder="Để trống để giữ mật khẩu hiện tại",
+                    help="Nhập mật khẩu mới hoặc để trống để giữ nguyên"
                 )
 
-                st.markdown("#### Image Settings")
+                st.markdown("#### Cài Đặt Ảnh")
 
                 # Show different settings based on resize method from session state
-                if st.session_state.edit_resize_method == "Fixed Width":
-                    st.markdown("##### Fixed Width Settings")
+                if st.session_state.edit_resize_method == "Chiều Rộng Cố Định":
+                    st.markdown("##### Cài Đặt Chiều Rộng Cố Định")
                     col1, col2 = st.columns(2)
 
                     with col1:
                         new_image_width = st.number_input(
-                            "Target Image Width (px)",
+                            "Chiều Rộng Ảnh Mục Tiêu (px)",
                             min_value=100,
                             max_value=2000,
                             value=current_image_config.get('target_width', 800),
                             key="edit_fixed_width",
-                            help="Images will be resized to this width while maintaining aspect ratio"
+                            help="Ảnh sẽ được thay đổi kích thước theo chiều rộng này, giữ nguyên tỷ lệ"
                         )
 
                         new_image_quality = st.slider(
-                            "Image Quality (%)",
+                            "Chất Lượng Ảnh (%)",
                             min_value=50,
                             max_value=100,
                             value=current_image_config.get('image_quality', 92),
                             key="edit_fixed_quality",
-                            help="Higher = better quality but larger file size"
+                            help="Cao hơn = chất lượng tốt hơn nhưng file lớn hơn"
                         )
 
                     with col2:
                         new_image_format = st.selectbox(
-                            "Image Format",
+                            "Định Dạng Ảnh",
                             options=["JPEG", "PNG", "WEBP"],
                             index=["JPEG", "PNG", "WEBP"].index(current_image_config.get('image_format', 'JPEG')),
                             key="edit_fixed_format",
-                            help="Output format for processed images"
+                            help="Định dạng đầu ra cho ảnh đã xử lý"
                         )
 
-                elif st.session_state.edit_resize_method == "Google Docs Original Size":
-                    st.markdown("##### Google Docs Original Size Settings")
-                    st.info("🎯 Images will be resized to their exact dimensions from Google Docs (width and height from <img> tags)")
+                elif st.session_state.edit_resize_method == "Kích Thước Gốc Google Docs":
+                    st.markdown("##### Cài Đặt Kích Thước Gốc Google Docs")
+                    st.info("🎯 Ảnh sẽ được thay đổi kích thước theo đúng kích thước từ Google Docs (chiều rộng và chiều cao từ thẻ <img>)")
 
                     col1, col2 = st.columns(2)
 
                     with col1:
                         new_image_quality = st.slider(
-                            "Image Quality (%)",
+                            "Chất Lượng Ảnh (%)",
                             min_value=50,
                             max_value=100,
                             value=current_image_config.get('image_quality', 92),
                             key="edit_gdocs_quality",
-                            help="Higher = better quality but larger file size"
+                            help="Cao hơn = chất lượng tốt hơn nhưng file lớn hơn"
                         )
 
                     with col2:
                         new_image_format = st.selectbox(
-                            "Image Format",
+                            "Định Dạng Ảnh",
                             options=["JPEG", "PNG", "WEBP"],
                             index=["JPEG", "PNG", "WEBP"].index(current_image_config.get('image_format', 'JPEG')),
                             key="edit_gdocs_format",
-                            help="Output format for processed images"
+                            help="Định dạng đầu ra cho ảnh đã xử lý"
                         )
 
                     # Keep existing width value (not used in google_docs_original mode)
@@ -732,9 +732,9 @@ elif page == "Edit Project":
 
                 else:
                     # No Resize (Original Quality)
-                    st.markdown("##### Original Quality Settings")
-                    st.success("✨ Images will be uploaded exactly as they are from Google Docs - no resizing, no re-encoding. Best quality!")
-                    st.info("Note: Original images may be large. Make sure your WordPress can handle them.")
+                    st.markdown("##### Cài Đặt Chất Lượng Gốc")
+                    st.success("✨ Ảnh sẽ được tải lên đúng như trong Google Docs - không thay đổi kích thước, không nén lại. Chất lượng tốt nhất!")
+                    st.info("Lưu ý: Ảnh gốc có thể lớn. Đảm bảo WordPress của bạn có thể xử lý được.")
 
                     # Set defaults (not used in no_resize mode)
                     new_image_width = current_image_config.get('target_width', 800)
@@ -742,65 +742,65 @@ elif page == "Edit Project":
                     new_image_format = current_image_config.get('image_format', 'PNG')
 
                 # Alt text words setting (for Alt Text Based naming)
-                if st.session_state.edit_naming_method_state == "Alt Text Based":
+                if st.session_state.edit_naming_method_state == "Theo Alt Text":
                     new_alt_text_words = st.number_input(
-                        "Number of words from alt text",
+                        "Số từ từ alt text",
                         min_value=1,
                         max_value=20,
                         value=current_image_config.get('alt_text_words', 5),
                         key="edit_alt_text_words",
-                        help="How many words from the alt text to use for the filename"
+                        help="Số từ từ alt text dùng làm tên file"
                     )
                 else:
                     new_alt_text_words = current_image_config.get('alt_text_words', 5)  # keep existing
 
-                st.markdown("#### Caption Options")
+                st.markdown("#### Tùy Chọn Caption")
 
                 new_enable_auto_captions = st.checkbox(
-                    "Enable Automatic WordPress Captions",
+                    "Bật Caption WordPress Tự Động",
                     value=current_image_config.get('enable_auto_captions', True),
-                    help="Automatically wrap images with WordPress [caption] shortcodes. Disable this if you want to control caption formatting with HTML patterns."
+                    help="Tự động bọc ảnh với shortcode [caption] của WordPress. Tắt nếu bạn muốn kiểm soát định dạng caption bằng HTML patterns."
                 )
 
-                st.markdown("#### Google Drive Backup (Optional)")
+                st.markdown("#### Sao Lưu Google Drive (Tùy Chọn)")
 
                 new_google_drive_folder_url = st.text_input(
-                    "Google Drive Folder URL",
+                    "URL Thư Mục Google Drive",
                     value=current_image_config.get('google_drive_folder_url', ''),
                     placeholder="https://drive.google.com/drive/folders/...",
-                    help="Optional: Paste a Google Drive folder URL to automatically backup images. A subfolder will be created for each post."
+                    help="Tùy chọn: Dán URL thư mục Google Drive để tự động sao lưu ảnh. Một thư mục con sẽ được tạo cho mỗi bài viết."
                 )
 
                 if new_google_drive_folder_url:
-                    st.info("📁 Images will be backed up to Google Drive before WordPress upload.")
+                    st.info("📁 Ảnh sẽ được sao lưu lên Google Drive trước khi tải lên WordPress.")
 
-                st.markdown("#### Notes")
+                st.markdown("#### Ghi Chú")
 
                 new_notes = st.text_area(
-                    "Project Notes",
+                    "Ghi Chú Dự Án",
                     value=current_project.get('notes', ''),
-                    help="Optional notes for reference"
+                    help="Ghi chú tùy chọn để tham khảo"
                 )
 
                 st.markdown("---")
-                submit = st.form_submit_button("Save Changes", type="primary", use_container_width=True)
+                submit = st.form_submit_button("Lưu Thay Đổi", type="primary", use_container_width=True)
 
                 if submit:
                     try:
                         # Prepare updates
                         # Convert UI label to backend key (from session state)
-                        if st.session_state.edit_resize_method == "Fixed Width":
+                        if st.session_state.edit_resize_method == "Chiều Rộng Cố Định":
                             new_resize_method_key = "fixed_width"
-                        elif st.session_state.edit_resize_method == "Google Docs Original Size":
+                        elif st.session_state.edit_resize_method == "Kích Thước Gốc Google Docs":
                             new_resize_method_key = "google_docs_original"
                         else:
                             new_resize_method_key = "no_resize"
 
                         # Convert naming method to backend key (from session state)
                         new_naming_method_key = "default"
-                        if st.session_state.edit_naming_method_state == "Alt Text Based":
+                        if st.session_state.edit_naming_method_state == "Theo Alt Text":
                             new_naming_method_key = "alt_text"
-                        elif st.session_state.edit_naming_method_state == "Main Keyword Based":
+                        elif st.session_state.edit_naming_method_state == "Theo Từ Khóa Chính":
                             new_naming_method_key = "main_keyword"
 
                         updates = {
@@ -825,10 +825,10 @@ elif page == "Edit Project":
                             updates['wordpress_app_password'] = new_wp_password
 
                         # Update project
-                        with st.spinner("Saving changes..."):
+                        with st.spinner("Đang lưu thay đổi..."):
                             result = update_project(selected_project_id, **updates)
 
-                        st.success("Project updated successfully!")
+                        st.success("Cập nhật dự án thành công!")
                         st.balloons()
 
                         # Clear session state so next edit reloads from database
@@ -840,32 +840,32 @@ elif page == "Edit Project":
                             del st.session_state.edit_project_id
 
                         # Show what changed
-                        with st.expander("Updated Project Details"):
+                        with st.expander("Chi Tiết Dự Án Đã Cập Nhật"):
                             st.json(result)
 
                     except Exception as e:
-                        st.error(f"Failed to update project: {e}")
+                        st.error(f"Cập nhật dự án thất bại: {e}")
 
     except Exception as e:
-        st.error(f"Error loading projects: {e}")
+        st.error(f"Lỗi khi tải dự án: {e}")
 
 # ============================================
 # Page: AI Pattern Editor
 # ============================================
 
 elif page == "AI Pattern Editor":
-    st.title("AI Pattern Editor")
-    st.markdown("### Modify HTML Patterns with Natural Language")
+    st.title("Trình Chỉnh Sửa Pattern AI")
+    st.markdown("### Chỉnh Sửa HTML Patterns Bằng Ngôn Ngữ Tự Nhiên")
     st.markdown("---")
 
     st.markdown("""
-    Use **AI-powered natural language** to modify your project's HTML transformation patterns.
+    Sử dụng **ngôn ngữ tự nhiên được hỗ trợ bởi AI** để chỉnh sửa các mẫu chuyển đổi HTML của dự án.
 
-    **Examples:**
-    - "Make all h2 headings blue"
-    - "Add a class 'highlight' to all paragraphs"
-    - "Make links open in new tab"
-    - "Remove all styling from images"
+    **Ví dụ:**
+    - "Làm tất cả tiêu đề h2 màu xanh"
+    - "Thêm class 'highlight' cho tất cả đoạn văn"
+    - "Làm các link mở ở tab mới"
+    - "Xóa tất cả style khỏi ảnh"
     """)
 
     st.markdown("---")
@@ -883,15 +883,15 @@ elif page == "AI Pattern Editor":
         projects = list_projects(status='all')
 
         if not projects:
-            st.warning("No projects found. Please create a project first.")
+            st.warning("Không tìm thấy dự án. Vui lòng tạo dự án trước.")
         else:
             # Select project
             project_options = {f"{p['project_name']} ({p['project_id']})": p['project_id'] for p in projects}
 
             selected_display = st.selectbox(
-                "Select Project",
+                "Chọn Dự Án",
                 options=list(project_options.keys()),
-                help="Choose which project's patterns to modify"
+                help="Chọn dự án cần chỉnh sửa patterns"
             )
             selected_project_id = project_options[selected_display]
 
@@ -903,13 +903,13 @@ elif page == "AI Pattern Editor":
             st.markdown("---")
 
             if not current_patterns:
-                st.warning("This project has no HTML patterns configured yet. Use 'Scan HTML Template' to generate patterns first.")
+                st.warning("Dự án này chưa có HTML patterns nào. Sử dụng 'Quét HTML Template' để tạo patterns trước.")
             else:
-                st.success(f"Project has **{len(current_patterns)}** pattern(s) configured")
+                st.success(f"Dự án có **{len(current_patterns)}** pattern(s) đã cấu hình")
 
                 # Show current patterns with delete buttons
-                with st.expander("View & Manage Current Patterns", expanded=True):
-                    st.markdown("**Click the delete button to remove a pattern**")
+                with st.expander("Xem & Quản Lý Patterns Hiện Tại", expanded=True):
+                    st.markdown("**Nhấn nút xóa để xóa một pattern**")
 
                     for idx, pattern in enumerate(current_patterns):
                         col1, col2 = st.columns([10, 1])
@@ -919,7 +919,7 @@ elif page == "AI Pattern Editor":
                             st.code(f"Source: {pattern.get('source_pattern', 'N/A')}\nTarget: {pattern.get('target_pattern', 'N/A')}", language="html")
 
                         with col2:
-                            if st.button("🗑️", key=f"delete_pattern_{idx}", help=f"Delete pattern {idx + 1}"):
+                            if st.button("🗑️", key=f"delete_pattern_{idx}", help=f"Xóa pattern {idx + 1}"):
                                 # Remove pattern from list
                                 updated_patterns = [p for i, p in enumerate(current_patterns) if i != idx]
 
@@ -930,27 +930,27 @@ elif page == "AI Pattern Editor":
                                     updated_html_configs = {**html_configs, 'patterns': updated_patterns}
                                     update_project(selected_project_id, html_configs=updated_html_configs)
 
-                                    st.success(f"Pattern {idx + 1} ({pattern.get('element_type')}) deleted successfully!")
+                                    st.success(f"Đã xóa Pattern {idx + 1} ({pattern.get('element_type')}) thành công!")
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"Failed to delete pattern: {e}")
+                                    st.error(f"Xóa pattern thất bại: {e}")
 
                         if idx < len(current_patterns) - 1:
                             st.markdown("---")
 
                 st.markdown("---")
-                st.markdown("### Natural Language Instructions")
+                st.markdown("### Hướng Dẫn Bằng Ngôn Ngữ Tự Nhiên")
 
                 # Natural language input
                 instruction = st.text_area(
-                    "What changes do you want to make?",
-                    placeholder="e.g., Make all h2 headings blue and add a bottom margin",
-                    help="Describe the changes you want in plain English"
+                    "Bạn muốn thay đổi gì?",
+                    placeholder="vd: Làm tất cả tiêu đề h2 màu xanh và thêm margin dưới",
+                    help="Mô tả thay đổi bạn muốn bằng tiếng Việt hoặc tiếng Anh"
                 )
 
-                if st.button("Apply Changes with AI", type="primary", disabled=not instruction):
+                if st.button("Áp Dụng Thay Đổi Với AI", type="primary", disabled=not instruction):
                     if instruction:
-                        with st.spinner("AI is analyzing your instruction and modifying patterns..."):
+                        with st.spinner("AI đang phân tích yêu cầu và chỉnh sửa patterns..."):
                             try:
                                 # Import the pattern modifier
                                 from src.utils.pattern_modifier import modify_patterns_with_ai
@@ -958,7 +958,7 @@ elif page == "AI Pattern Editor":
                                 # Get API key
                                 api_key = get_secret('ANTHROPIC_API_KEY')
                                 if not api_key:
-                                    st.error("ANTHROPIC_API_KEY not found in secrets or environment variables")
+                                    st.error("Không tìm thấy ANTHROPIC_API_KEY trong secrets hoặc biến môi trường")
                                 else:
                                     # Modify patterns
                                     result = modify_patterns_with_ai(
@@ -973,39 +973,39 @@ elif page == "AI Pattern Editor":
                                         st.session_state.modified_patterns_project_id = selected_project_id
                                         st.session_state.pattern_changes_made = result['changes_made']
 
-                                        st.success("Patterns modified successfully!")
-                                        st.info("Scroll down to review and save the changes.")
+                                        st.success("Chỉnh sửa patterns thành công!")
+                                        st.info("Cuộn xuống để xem lại và lưu thay đổi.")
 
                                     else:
-                                        st.error(f"AI modification failed: {result.get('error', 'Unknown error')}")
+                                        st.error(f"Chỉnh sửa AI thất bại: {result.get('error', 'Lỗi không xác định')}")
 
                             except Exception as e:
-                                st.error(f"Error: {e}")
+                                st.error(f"Lỗi: {e}")
                                 import traceback
-                                with st.expander("Error Details"):
+                                with st.expander("Chi Tiết Lỗi"):
                                     st.code(traceback.format_exc())
 
             # Display modified patterns from session state (outside button scope)
             if st.session_state.modified_patterns and st.session_state.modified_patterns_project_id == selected_project_id:
                 st.markdown("---")
-                st.markdown("### Modified Patterns")
+                st.markdown("### Patterns Đã Chỉnh Sửa")
 
                 # Show what changed
                 if st.session_state.pattern_changes_made:
-                    st.info(f"**Changes Made:** {st.session_state.pattern_changes_made}")
+                    st.info(f"**Thay đổi đã thực hiện:** {st.session_state.pattern_changes_made}")
 
                 # Show new patterns
-                with st.expander("View Updated Patterns", expanded=True):
+                with st.expander("Xem Patterns Đã Cập Nhật", expanded=True):
                     st.json(st.session_state.modified_patterns)
 
                 # Save/Discard buttons
                 st.markdown("---")
-                st.markdown("### Save Changes?")
+                st.markdown("### Lưu Thay Đổi?")
 
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    if st.button("Save to Project", type="primary", use_container_width=True, key="save_modified_patterns_btn"):
+                    if st.button("Lưu Vào Dự Án", type="primary", use_container_width=True, key="save_modified_patterns_btn"):
                         try:
                             # Get current project config
                             current_project = get_project(st.session_state.modified_patterns_project_id)
@@ -1026,50 +1026,50 @@ elif page == "AI Pattern Editor":
                             st.session_state.modified_patterns_project_id = None
                             st.session_state.pattern_changes_made = None
 
-                            st.success("Patterns saved to project!")
+                            st.success("Đã lưu patterns vào dự án!")
                             st.balloons()
-                            st.info("You can now use these patterns when publishing content!")
+                            st.info("Bạn có thể sử dụng các patterns này khi đăng nội dung!")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Failed to save: {e}")
+                            st.error(f"Lưu thất bại: {e}")
                             import traceback
                             st.code(traceback.format_exc())
 
                 with col2:
-                    if st.button("Discard Changes", use_container_width=True, key="discard_modified_patterns_btn"):
+                    if st.button("Hủy Thay Đổi", use_container_width=True, key="discard_modified_patterns_btn"):
                         # Clear session state
                         st.session_state.modified_patterns = None
                         st.session_state.modified_patterns_project_id = None
                         st.session_state.pattern_changes_made = None
-                        st.info("Changes discarded. Patterns not saved.")
+                        st.info("Đã hủy thay đổi. Patterns không được lưu.")
                         st.rerun()
 
     except Exception as e:
-        st.error(f"Error loading projects: {e}")
+        st.error(f"Lỗi khi tải dự án: {e}")
 
 # ============================================
 # Page: Scan HTML Template
 # ============================================
 
 elif page == "Scan HTML Template":
-    st.title("Scan HTML Template")
-    st.markdown("### Auto-Generate Patterns from Sample HTML")
+    st.title("Quét HTML Template")
+    st.markdown("### Tự Động Tạo Patterns Từ HTML Mẫu")
     st.markdown("---")
 
     st.markdown("""
-    **How it works:**
-    1. **🧪 Test Run (Optional)**: Paste a Google Docs URL and convert it to see the exact HTML structure
-    2. Paste **TARGET HTML** - how you want content formatted in WordPress (required)
-    3. **SOURCE HTML** will be auto-filled from Test Run, or paste manually (recommended for better accuracy)
-    4. AI analyzes both and generates precise transformation patterns
-    5. Review and save patterns to your project
+    **Cách hoạt động:**
+    1. **🧪 Chạy Thử (Tùy Chọn)**: Dán URL Google Docs để xem cấu trúc HTML chính xác
+    2. Dán **HTML MỤC TIÊU** - định dạng bạn muốn trong WordPress (bắt buộc)
+    3. **HTML NGUỒN** sẽ được tự động điền từ Chạy Thử, hoặc dán thủ công (khuyến nghị để chính xác hơn)
+    4. AI phân tích cả hai và tạo các mẫu chuyển đổi chính xác
+    5. Xem lại và lưu patterns vào dự án
 
-    **Tips for best results:**
-    - **Use Test Run**: Get the exact HTML structure from Google Docs automatically
-    - **Target HTML**: Copy formatted content from your WordPress theme (HTML view)
-    - **Source HTML**: Will be populated by Test Run, or paste manually
-    - Include examples of all element types (headings, paragraphs, images, lists, tables, etc.)
-    - Providing both source and target yields the most accurate regex patterns
+    **Mẹo để có kết quả tốt nhất:**
+    - **Dùng Chạy Thử**: Lấy cấu trúc HTML chính xác từ Google Docs tự động
+    - **HTML Mục Tiêu**: Copy nội dung đã định dạng từ theme WordPress (chế độ xem HTML)
+    - **HTML Nguồn**: Sẽ được điền từ Chạy Thử, hoặc dán thủ công
+    - Bao gồm ví dụ của tất cả loại phần tử (tiêu đề, đoạn văn, ảnh, danh sách, bảng, v.v.)
+    - Cung cấp cả nguồn và mục tiêu sẽ cho regex patterns chính xác nhất
     """)
 
     st.markdown("---")
@@ -1085,14 +1085,14 @@ elif page == "Scan HTML Template":
         projects = list_projects(status='all')
 
         if not projects:
-            st.warning("No projects found. Please create a project first.")
+            st.warning("Không tìm thấy dự án. Vui lòng tạo dự án trước.")
         else:
             project_options = {f"{p['project_name']} ({p['project_id']})": p['project_id'] for p in projects}
 
             selected_display = st.selectbox(
-                "Select Project",
+                "Chọn Dự Án",
                 options=list(project_options.keys()),
-                help="Patterns will be saved to this project"
+                help="Patterns sẽ được lưu vào dự án này"
             )
             selected_project_id = project_options[selected_display]
 
@@ -1103,38 +1103,38 @@ elif page == "Scan HTML Template":
                 st.session_state.converted_docs_html = ""
 
             # Test Google Docs Conversion Section
-            with st.expander("🧪 Test Run: Convert Google Docs to HTML (Optional)", expanded=False):
+            with st.expander("🧪 Chạy Thử: Chuyển Đổi Google Docs Sang HTML (Tùy Chọn)", expanded=False):
                 st.markdown("""
-                **Why use this?**
-                - See the exact HTML structure that Google Docs exports
-                - Automatically cleaned (H1 and everything before removed)
-                - Auto-fills the Source HTML field below
-                - More accurate pattern generation
+                **Tại sao dùng tính năng này?**
+                - Xem cấu trúc HTML chính xác mà Google Docs xuất ra
+                - Tự động làm sạch (H1 và mọi thứ trước đó được loại bỏ)
+                - Tự động điền vào trường HTML Nguồn bên dưới
+                - Tạo pattern chính xác hơn
 
-                **How it works:**
-                1. Paste any Google Docs URL
-                2. Click "Convert to HTML"
-                3. HTML is converted and cleaned (H1 removed)
-                4. Cleaned HTML auto-fills the Source HTML field below
+                **Cách hoạt động:**
+                1. Dán URL Google Docs bất kỳ
+                2. Nhấn "Chuyển Đổi Sang HTML"
+                3. HTML được chuyển đổi và làm sạch (H1 được loại bỏ)
+                4. HTML đã làm sạch tự động điền vào trường HTML Nguồn bên dưới
 
-                **What gets cleaned:**
-                - Extracts title from H1 (for display)
-                - Removes H1 and everything before it
-                - This matches the actual publishing workflow
+                **Những gì được làm sạch:**
+                - Trích xuất tiêu đề từ H1 (để hiển thị)
+                - Loại bỏ H1 và mọi thứ trước đó
+                - Điều này phù hợp với quy trình đăng bài thực tế
                 """)
 
                 test_docs_url = st.text_input(
-                    "Google Docs URL",
+                    "URL Google Docs",
                     placeholder="https://docs.google.com/document/d/YOUR_DOC_ID/edit",
-                    help="Any Google Docs URL (edit, view, or published)"
+                    help="URL Google Docs bất kỳ (edit, view, hoặc published)"
                 )
 
                 col1, col2 = st.columns([1, 3])
                 with col1:
-                    convert_btn = st.button("Convert to HTML", type="secondary", use_container_width=True)
+                    convert_btn = st.button("Chuyển Đổi Sang HTML", type="secondary", use_container_width=True)
 
                 if convert_btn and test_docs_url:
-                    with st.spinner("Converting Google Docs to HTML..."):
+                    with st.spinner("Đang chuyển đổi Google Docs sang HTML..."):
                         try:
                             # Force reload to get latest code
                             import sys
@@ -1147,12 +1147,12 @@ elif page == "Scan HTML Template":
 
                             # Debug: Show credential paths (calculated at runtime)
                             credentials_dir, token_path, client_secrets = _get_credentials_paths()
-                            st.info(f"🔍 Looking for credentials in: {credentials_dir}")
-                            st.info(f"🔍 Client secrets path: {client_secrets}")
-                            st.info(f"🔍 Token path: {token_path}")
-                            st.info(f"🔍 Client secrets exists: {os.path.exists(client_secrets)}")
-                            st.info(f"🔍 Token exists: {os.path.exists(token_path)}")
-                            st.info(f"🔍 Client secrets readable: {os.access(client_secrets, os.R_OK)}")
+                            st.info(f"🔍 Đang tìm credentials tại: {credentials_dir}")
+                            st.info(f"🔍 Đường dẫn client secrets: {client_secrets}")
+                            st.info(f"🔍 Đường dẫn token: {token_path}")
+                            st.info(f"🔍 Client secrets tồn tại: {os.path.exists(client_secrets)}")
+                            st.info(f"🔍 Token tồn tại: {os.path.exists(token_path)}")
+                            st.info(f"🔍 Client secrets có thể đọc: {os.access(client_secrets, os.R_OK)}")
 
                             result = google_docs_to_html(test_docs_url)
 
@@ -1167,43 +1167,43 @@ elif page == "Scan HTML Template":
                                 # Store cleaned HTML for pattern generation
                                 st.session_state.converted_docs_html = cleaned_html
 
-                                st.success(f"✅ Converted: {result.get('document_name', 'Document')}")
+                                st.success(f"✅ Đã chuyển đổi: {result.get('document_name', 'Document')}")
                                 if title:
-                                    st.info(f"📝 Extracted title: **{title}** (H1 removed from content)")
-                                st.info(f"🧹 Cleaned HTML loaded into Source HTML field (removed H1 and everything before it)")
+                                    st.info(f"📝 Tiêu đề đã trích xuất: **{title}** (H1 đã được loại bỏ khỏi nội dung)")
+                                st.info(f"🧹 HTML đã làm sạch được tải vào trường HTML Nguồn (đã loại bỏ H1 và mọi thứ trước đó)")
 
                                 # Show before/after preview
                                 col1, col2 = st.columns(2)
                                 with col1:
-                                    with st.expander("Raw HTML (Original)"):
+                                    with st.expander("HTML Gốc"):
                                         preview = raw_html[:1000] + "..." if len(raw_html) > 1000 else raw_html
                                         st.code(preview, language="html")
-                                        st.caption(f"Total length: {len(raw_html)} chars")
+                                        st.caption(f"Tổng độ dài: {len(raw_html)} ký tự")
 
                                 with col2:
-                                    with st.expander("Cleaned HTML (For Patterns)"):
+                                    with st.expander("HTML Đã Làm Sạch (Cho Patterns)"):
                                         preview = cleaned_html[:1000] + "..." if len(cleaned_html) > 1000 else cleaned_html
                                         st.code(preview, language="html")
-                                        st.caption(f"Total length: {len(cleaned_html)} chars")
+                                        st.caption(f"Tổng độ dài: {len(cleaned_html)} ký tự")
                             else:
-                                st.error(f"❌ Conversion failed: {result.get('error')}")
+                                st.error(f"❌ Chuyển đổi thất bại: {result.get('error')}")
                                 # Show full error details
-                                with st.expander("Error Details"):
+                                with st.expander("Chi Tiết Lỗi"):
                                     st.json(result)
                         except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                            st.error(f"❌ Lỗi: {e}")
                             import traceback
-                            with st.expander("Full Error Traceback"):
+                            with st.expander("Chi Tiết Lỗi Đầy Đủ"):
                                 st.code(traceback.format_exc())
 
             st.markdown("---")
 
             # Target HTML input (required)
             html_sample = st.text_area(
-                "Target HTML (Required) - Your Desired Output Format",
-                placeholder="<h2 class='entry-title'>Example Heading</h2>\n<p class='article-text'>Example paragraph...</p>",
+                "HTML Mục Tiêu (Bắt Buộc) - Định Dạng Đầu Ra Mong Muốn",
+                placeholder="<h2 class='entry-title'>Tiêu Đề Ví Dụ</h2>\n<p class='article-text'>Đoạn văn ví dụ...</p>",
                 height=250,
-                help="Paste sample HTML showing how you want the content formatted in WordPress"
+                help="Dán HTML mẫu thể hiện cách bạn muốn nội dung được định dạng trong WordPress"
             )
 
             st.markdown("---")
@@ -1211,27 +1211,27 @@ elif page == "Scan HTML Template":
             # Source HTML input (optional but recommended) - auto-filled from conversion if available
             source_html_value = st.session_state.converted_docs_html if st.session_state.converted_docs_html else ""
             source_html = st.text_area(
-                "Source HTML (Optional) - From Google Docs",
+                "HTML Nguồn (Tùy Chọn) - Từ Google Docs",
                 value=source_html_value,
-                placeholder="<h2>Example Heading</h2>\n<p>Example paragraph...</p>" if not source_html_value else "",
+                placeholder="<h2>Tiêu Đề Ví Dụ</h2>\n<p>Đoạn văn ví dụ...</p>" if not source_html_value else "",
                 height=200,
-                help="Optional: Paste example HTML from Google Docs or use the Test Run feature above"
+                help="Tùy chọn: Dán HTML mẫu từ Google Docs hoặc dùng tính năng Chạy Thử ở trên"
             )
 
             # Clear button for source HTML
             if source_html_value:
-                if st.button("Clear Source HTML", type="secondary"):
+                if st.button("Xóa HTML Nguồn", type="secondary"):
                     st.session_state.converted_docs_html = ""
                     st.rerun()
 
-            if st.button("Analyze HTML & Generate Patterns", type="primary", disabled=not html_sample):
+            if st.button("Phân Tích HTML & Tạo Patterns", type="primary", disabled=not html_sample):
                 if html_sample:
-                    with st.spinner("AI is analyzing HTML and generating patterns..."):
+                    with st.spinner("AI đang phân tích HTML và tạo patterns..."):
                         try:
                             # Get API key
                             api_key = get_secret('ANTHROPIC_API_KEY')
                             if not api_key:
-                                st.error("ANTHROPIC_API_KEY not found in secrets or environment variables")
+                                st.error("Không tìm thấy ANTHROPIC_API_KEY trong secrets hoặc biến môi trường")
                             else:
                                 # Analyze HTML with AI
                                 client = anthropic.Anthropic(api_key=api_key)
@@ -1369,49 +1369,49 @@ RULES:
                                     st.session_state.generated_patterns = generated_patterns
                                     st.session_state.patterns_project_id = selected_project_id
 
-                                    st.success(f"Generated **{len(generated_patterns)}** pattern(s)!")
-                                    st.info("Scroll down to review and save the patterns.")
+                                    st.success(f"Đã tạo **{len(generated_patterns)}** pattern(s)!")
+                                    st.info("Cuộn xuống để xem lại và lưu patterns.")
                                 else:
-                                    st.warning("No patterns generated. Try providing more HTML examples.")
+                                    st.warning("Không tạo được patterns. Thử cung cấp thêm ví dụ HTML.")
 
                         except json.JSONDecodeError as e:
-                            st.error(f"Failed to parse AI response: {e}")
+                            st.error(f"Không thể phân tích phản hồi AI: {e}")
                             st.code(response_text)
                         except Exception as e:
-                            st.error(f"Error: {e}")
+                            st.error(f"Lỗi: {e}")
                             import traceback
-                            with st.expander("Error Details"):
+                            with st.expander("Chi Tiết Lỗi"):
                                 st.code(traceback.format_exc())
 
             # Display saved patterns from session state (outside button scope)
             if st.session_state.generated_patterns and st.session_state.patterns_project_id == selected_project_id:
                 st.markdown("---")
-                st.markdown("### Generated Patterns")
+                st.markdown("### Patterns Đã Tạo")
 
                 # Show generated patterns
-                with st.expander("View Generated Patterns", expanded=True):
+                with st.expander("Xem Patterns Đã Tạo", expanded=True):
                     st.json(st.session_state.generated_patterns)
 
                 # Preview transformations
-                st.markdown("### Pattern Preview")
+                st.markdown("### Xem Trước Pattern")
                 for pattern in st.session_state.generated_patterns:
                     st.markdown(f"**{pattern['element_type'].upper()}:**")
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.caption("Source Pattern:")
+                        st.caption("Pattern Nguồn:")
                         st.code(pattern['source_pattern'], language="regex")
                     with col2:
-                        st.caption("Target Pattern:")
+                        st.caption("Pattern Mục Tiêu:")
                         st.code(pattern['target_pattern'], language="html")
 
                 # Save/Discard buttons
                 st.markdown("---")
-                st.markdown("### Save Patterns?")
+                st.markdown("### Lưu Patterns?")
 
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    if st.button("Save to Project", type="primary", use_container_width=True, key="save_patterns_btn"):
+                    if st.button("Lưu Vào Dự Án", type="primary", use_container_width=True, key="save_patterns_btn"):
                         try:
                             # Get current project config
                             current_project = get_project(st.session_state.patterns_project_id)
@@ -1431,32 +1431,32 @@ RULES:
                             st.session_state.generated_patterns = None
                             st.session_state.patterns_project_id = None
 
-                            st.success("Patterns saved to project!")
+                            st.success("Đã lưu patterns vào dự án!")
                             st.balloons()
-                            st.info("You can now use these patterns when publishing content!")
+                            st.info("Bạn có thể sử dụng các patterns này khi đăng nội dung!")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Failed to save: {e}")
+                            st.error(f"Lưu thất bại: {e}")
                             import traceback
                             st.code(traceback.format_exc())
 
                 with col2:
-                    if st.button("Discard", use_container_width=True, key="discard_patterns_btn"):
+                    if st.button("Hủy", use_container_width=True, key="discard_patterns_btn"):
                         # Clear session state
                         st.session_state.generated_patterns = None
                         st.session_state.patterns_project_id = None
-                        st.info("Patterns discarded.")
+                        st.info("Đã hủy patterns.")
                         st.rerun()
 
     except Exception as e:
-        st.error(f"Error loading projects: {e}")
+        st.error(f"Lỗi khi tải dự án: {e}")
 
 # ============================================
 # Page: Publish Content
 # ============================================
 
 elif page == "Publish Content":
-    st.title("Publish Content to WordPress")
+    st.title("Đăng Nội Dung Lên WordPress")
     st.markdown("---")
 
     # Fetch projects
@@ -1464,36 +1464,36 @@ elif page == "Publish Content":
         projects = list_projects(status='active')
 
         if not projects:
-            st.warning("No projects found. Please create a project first.")
-            st.info("Go to 'Create Project' page to add your WordPress site.")
+            st.warning("Không tìm thấy dự án. Vui lòng tạo dự án trước.")
+            st.info("Đi đến trang 'Tạo Dự Án Mới' để thêm trang WordPress của bạn.")
         else:
             st.markdown("""
-            ### How it works:
+            ### Cách hoạt động:
 
-            1. **Select a project** (your WordPress site)
-            2. **Paste any Google Docs URL** (edit, view, or published URL)
-            3. **Click Publish** and wait for the magic to happen!
+            1. **Chọn dự án** (trang WordPress của bạn)
+            2. **Dán URL Google Docs bất kỳ** (edit, view, hoặc published URL)
+            3. **Nhấn Đăng Bài** và chờ phép màu xảy ra!
 
-            The system will:
-            - Connect to Google Drive API (OAuth authentication)
-            - Convert Google Docs to HTML
-            - Process and upload images
-            - Apply HTML transformations (if configured)
-            - Create a draft post in WordPress
+            Hệ thống sẽ:
+            - Kết nối với Google Drive API (xác thực OAuth)
+            - Chuyển đổi Google Docs sang HTML
+            - Xử lý và tải ảnh lên
+            - Áp dụng chuyển đổi HTML (nếu đã cấu hình)
+            - Tạo bài viết nháp trên WordPress
             """)
 
             st.markdown("---")
 
             # Project selection OUTSIDE form for dynamic updates
-            st.markdown("### Select Project")
+            st.markdown("### Chọn Dự Án")
 
             project_options = {f"{p['project_name']} ({p['project_id']})": p['project_id'] for p in projects}
-            project_options["No Project (Use defaults)"] = None
+            project_options["Không Chọn Dự Án (Dùng mặc định)"] = None
 
             selected_display = st.selectbox(
-                "Project",
+                "Dự Án",
                 options=list(project_options.keys()),
-                help="Select which WordPress site to publish to",
+                help="Chọn trang WordPress để đăng bài",
                 key="publish_project_selector"
             )
             selected_project_id = project_options[selected_display]
@@ -1502,7 +1502,7 @@ elif page == "Publish Content":
             project = None
             if selected_project_id:
                 project = get_project(selected_project_id)
-                st.info(f"Will publish to: **{project['wordpress_url']}**")
+                st.info(f"Sẽ đăng lên: **{project['wordpress_url']}**")
 
             # Show main keyword input if project uses main_keyword naming (OUTSIDE form)
             main_keyword = ""
@@ -1511,66 +1511,66 @@ elif page == "Publish Content":
                 naming_method = image_configs.get('naming_method', 'default')
 
                 if naming_method == 'main_keyword':
-                    st.markdown("### Main Keyword for Image Naming")
+                    st.markdown("### Từ Khóa Chính Để Đặt Tên Ảnh")
                     main_keyword = st.text_input(
-                        "Main Keyword",
-                        placeholder="e.g., quat-tran-sunhouse",
-                        help="Images will be named: main-keyword-01, main-keyword-02, etc.",
+                        "Từ Khóa Chính",
+                        placeholder="vd: quat-tran-sunhouse",
+                        help="Ảnh sẽ được đặt tên: tu-khoa-chinh-01, tu-khoa-chinh-02, v.v.",
                         key="publish_main_keyword"
                     )
                     if not main_keyword:
-                        st.warning("Please provide a main keyword for image naming")
+                        st.warning("Vui lòng cung cấp từ khóa chính để đặt tên ảnh")
 
             st.markdown("---")
 
             with st.form("publish_form"):
-                st.markdown("### Google Docs URL")
+                st.markdown("### URL Google Docs")
 
                 docs_url = st.text_input(
-                    "Content Document URL",
+                    "URL Tài Liệu Nội Dung",
                     placeholder="https://docs.google.com/document/d/YOUR_DOC_ID/edit",
-                    help="Any Google Docs URL works: edit, view, or published URLs"
+                    help="URL Google Docs bất kỳ: edit, view, hoặc published URLs"
                 )
 
                 st.markdown("---")
 
                 # Show requirements
-                with st.expander("Requirements"):
+                with st.expander("Yêu Cầu"):
                     st.markdown("""
-                    **Google Docs Setup:**
-                    1. Open your document in Google Docs
-                    2. Copy the URL from your browser (edit, view, or published URL - all work!)
-                    3. First time: Browser will open for Google authentication
-                    4. Grant access to your Google account
+                    **Cài Đặt Google Docs:**
+                    1. Mở tài liệu trong Google Docs
+                    2. Copy URL từ trình duyệt (edit, view, hoặc published URL - đều hoạt động!)
+                    3. Lần đầu: Trình duyệt sẽ mở để xác thực Google
+                    4. Cấp quyền truy cập tài khoản Google của bạn
 
-                    **Note:** OAuth credentials must be configured in `credentials/` folder.
+                    **Lưu ý:** OAuth credentials phải được cấu hình trong thư mục `credentials/`.
 
-                    **WordPress Setup:**
-                    - WordPress REST API must be enabled (default in WordPress 4.7+)
-                    - Application Password must be valid
-                    - User must have permission to create posts
+                    **Cài Đặt WordPress:**
+                    - WordPress REST API phải được bật (mặc định trong WordPress 4.7+)
+                    - Application Password phải hợp lệ
+                    - Người dùng phải có quyền tạo bài viết
                     """)
 
-                submit = st.form_submit_button("Publish to WordPress", type="primary", use_container_width=True)
+                submit = st.form_submit_button("Đăng Lên WordPress", type="primary", use_container_width=True)
 
                 if submit:
                     if not docs_url:
-                        st.error("Please provide a Google Docs URL")
+                        st.error("Vui lòng cung cấp URL Google Docs")
 
                     if docs_url:
                         # Execute workflow
                         st.markdown("---")
-                        st.markdown("### Publishing Progress")
+                        st.markdown("### Tiến Trình Đăng Bài")
 
                         progress_bar = st.progress(0)
                         status_text = st.empty()
 
                         try:
-                            status_text.text("Starting workflow...")
+                            status_text.text("Đang bắt đầu quy trình...")
                             progress_bar.progress(10)
 
                             # Execute the actual workflow
-                            with st.spinner("Publishing... This may take 1-2 minutes."):
+                            with st.spinner("Đang đăng bài... Có thể mất 1-2 phút."):
                                 result = execute_publishing_workflow(
                                     google_docs_url=docs_url,
                                     project_id=selected_project_id,
@@ -1582,71 +1582,71 @@ elif page == "Publish Content":
                             # Show results
                             st.markdown("---")
                             if result['success']:
-                                st.success("**Publishing completed successfully!**")
+                                st.success("**Đăng bài hoàn tất thành công!**")
 
                                 # Show details in columns
                                 col1, col2, col3 = st.columns(3)
 
                                 with col1:
-                                    st.metric("Post Title", result['post_title'])
+                                    st.metric("Tiêu Đề Bài", result['post_title'])
                                 with col2:
-                                    st.metric("Images Processed", result['images_processed'])
+                                    st.metric("Số Ảnh Đã Xử Lý", result['images_processed'])
                                 with col3:
-                                    st.metric("Time Taken", f"{result['execution_time']:.1f}s")
+                                    st.metric("Thời Gian", f"{result['execution_time']:.1f}s")
 
                                 # Show links
-                                st.markdown("### Links")
-                                st.markdown(f"**View Post:** [{result['post_url']}]({result['post_url']})")
+                                st.markdown("### Liên Kết")
+                                st.markdown(f"**Xem Bài Viết:** [{result['post_url']}]({result['post_url']})")
                                 if result.get('edit_url'):
-                                    st.markdown(f"**Edit Post:** [{result['edit_url']}]({result['edit_url']})")
+                                    st.markdown(f"**Chỉnh Sửa Bài:** [{result['edit_url']}]({result['edit_url']})")
 
-                                st.info("**Note:** Post was created as a DRAFT. Review and publish from WordPress admin.")
+                                st.info("**Lưu ý:** Bài viết được tạo dưới dạng NHÁP. Xem lại và xuất bản từ WordPress admin.")
 
                                 # Show full result
-                                with st.expander("Full Result Details"):
+                                with st.expander("Chi Tiết Kết Quả Đầy Đủ"):
                                     st.json(result)
                             else:
-                                st.error("**Publishing failed!**")
-                                st.error(f"**Error:** {result.get('error', 'Unknown error')}")
-                                st.error(f"**Failed at step:** {result.get('step_failed', 'Unknown')}")
+                                st.error("**Đăng bài thất bại!**")
+                                st.error(f"**Lỗi:** {result.get('error', 'Lỗi không xác định')}")
+                                st.error(f"**Thất bại tại bước:** {result.get('step_failed', 'Không xác định')}")
 
-                                with st.expander("Debug Information"):
+                                with st.expander("Thông Tin Debug"):
                                     st.json(result)
 
                         except Exception as e:
                             progress_bar.progress(0)
-                            st.error(f"**Unexpected error:** {e}")
+                            st.error(f"**Lỗi không mong muốn:** {e}")
                             import traceback
-                            with st.expander("Error Details"):
+                            with st.expander("Chi Tiết Lỗi"):
                                 st.code(traceback.format_exc())
 
     except Exception as e:
-        st.error(f"Error loading projects: {e}")
+        st.error(f"Lỗi khi tải dự án: {e}")
 
 # ============================================
 # Page: Publishing History
 # ============================================
 
 elif page == "Publishing History":
-    st.title("Publishing History")
+    st.title("Lịch Sử Đăng Bài")
     st.markdown("---")
 
-    st.info("Publishing history is stored in the SQLite database (`data/clients.db`).")
+    st.info("Lịch sử đăng bài được lưu trong cơ sở dữ liệu Supabase.")
 
     st.markdown("""
-    ### View History via Database
+    ### Xem Lịch Sử Qua Cơ Sở Dữ Liệu
 
-    You can query the `publishing_history` table directly:
+    Bạn có thể truy vấn bảng `publishing_history` trực tiếp:
 
     ```sql
     SELECT * FROM publishing_history ORDER BY published_at DESC LIMIT 10;
     ```
 
-    ### Coming Soon
-    - View recent publishes
-    - Filter by project
-    - Success/failure statistics
-    - Detailed logs
+    ### Sắp Ra Mắt
+    - Xem các bài đăng gần đây
+    - Lọc theo dự án
+    - Thống kê thành công/thất bại
+    - Nhật ký chi tiết
     """)
 
 # ============================================
@@ -1654,13 +1654,13 @@ elif page == "Publishing History":
 # ============================================
 
 elif page == "Batch Publish":
-    st.title("Batch Publish to WordPress")
+    st.title("Đăng Hàng Loạt Lên WordPress")
     st.markdown("---")
 
     # Initialize session state for batch data - use a simple list structure
     if 'batch_rows' not in st.session_state:
         st.session_state.batch_rows = [
-            {'select': True, 'url': '', 'keyword': '', 'status': '⏳ Pending', 'title': '', 'post_url': ''}
+            {'select': True, 'url': '', 'keyword': '', 'status': '⏳ Đang Chờ', 'title': '', 'post_url': ''}
             for _ in range(5)
         ]
 
@@ -1674,14 +1674,14 @@ elif page == "Batch Publish":
         projects = list_projects(status='active')
 
         if not projects:
-            st.warning("No projects found. Please create a project first.")
+            st.warning("Không tìm thấy dự án. Vui lòng tạo dự án trước.")
         else:
             # Project selection
             col1, col2 = st.columns([2, 1])
             with col1:
                 project_options = {f"{p['project_name']} ({p['project_id']})": p['project_id'] for p in projects}
                 selected_display = st.selectbox(
-                    "Select Project",
+                    "Chọn Dự Án",
                     options=list(project_options.keys()),
                     key="batch_project"
                 )
@@ -1698,28 +1698,28 @@ elif page == "Batch Publish":
                 uses_keyword_naming = image_configs.get('naming_method', 'default') == 'main_keyword'
 
             st.markdown("---")
-            st.markdown("**Paste Google Docs URLs in the table below:**")
+            st.markdown("**Dán các URL Google Docs vào bảng bên dưới:**")
 
             if uses_keyword_naming:
-                st.info("🔑 This project uses **Main Keyword** image naming. Enter a keyword for each URL.")
+                st.info("🔑 Dự án này sử dụng **Từ Khóa Chính** để đặt tên ảnh. Nhập từ khóa cho mỗi URL.")
 
             # Table header - adjust columns based on whether keyword is needed
             if uses_keyword_naming:
                 header_cols = st.columns([0.3, 2.5, 1.5, 0.8, 1, 1.5, 0.3])
                 header_cols[0].markdown("**✓**")
-                header_cols[1].markdown("**Google Docs URL**")
-                header_cols[2].markdown("**Main Keyword**")
-                header_cols[3].markdown("**Status**")
-                header_cols[4].markdown("**Title**")
-                header_cols[5].markdown("**Post URL**")
+                header_cols[1].markdown("**URL Google Docs**")
+                header_cols[2].markdown("**Từ Khóa Chính**")
+                header_cols[3].markdown("**Trạng Thái**")
+                header_cols[4].markdown("**Tiêu Đề**")
+                header_cols[5].markdown("**URL Bài Viết**")
                 header_cols[6].markdown("**🗑️**")
             else:
                 header_cols = st.columns([0.4, 3.5, 1, 1.3, 1.8, 0.4])
                 header_cols[0].markdown("**✓**")
-                header_cols[1].markdown("**Google Docs URL**")
-                header_cols[2].markdown("**Status**")
-                header_cols[3].markdown("**Post Title**")
-                header_cols[4].markdown("**Post URL**")
+                header_cols[1].markdown("**URL Google Docs**")
+                header_cols[2].markdown("**Trạng Thái**")
+                header_cols[3].markdown("**Tiêu Đề Bài**")
+                header_cols[4].markdown("**URL Bài Viết**")
                 header_cols[5].markdown("**🗑️**")
 
             # Track which row to delete (if any)
@@ -1749,7 +1749,7 @@ elif page == "Batch Publish":
                         value=row['url'],
                         key=f"url_{i}",
                         label_visibility="collapsed",
-                        placeholder="Paste Google Docs URL here..."
+                        placeholder="Dán URL Google Docs vào đây..."
                     )
                 col_idx += 1
 
@@ -1760,7 +1760,7 @@ elif page == "Batch Publish":
                             value=row.get('keyword', ''),
                             key=f"kw_{i}",
                             label_visibility="collapsed",
-                            placeholder="e.g., quat-tran"
+                            placeholder="vd: quat-tran"
                         )
                     col_idx += 1
 
@@ -1778,13 +1778,13 @@ elif page == "Batch Publish":
 
                 with cols[col_idx]:
                     if row['post_url']:
-                        st.markdown(f"[View]({row['post_url']})")
+                        st.markdown(f"[Xem]({row['post_url']})")
                     else:
                         st.markdown("—")
                 col_idx += 1
 
                 with cols[col_idx]:
-                    if st.button("🗑️", key=f"del_{i}", help="Delete this row"):
+                    if st.button("🗑️", key=f"del_{i}", help="Xóa dòng này"):
                         row_to_delete = i
 
             # Delete row if requested (after loop to avoid index issues)
@@ -1798,16 +1798,16 @@ elif page == "Batch Publish":
             col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
             with col1:
-                if st.button("➕ Add Row", use_container_width=True):
+                if st.button("➕ Thêm Dòng", use_container_width=True):
                     st.session_state.batch_rows.append(
-                        {'select': True, 'url': '', 'keyword': '', 'status': '⏳ Pending', 'title': '', 'post_url': ''}
+                        {'select': True, 'url': '', 'keyword': '', 'status': '⏳ Đang Chờ', 'title': '', 'post_url': ''}
                     )
                     st.rerun()
 
             with col2:
-                if st.button("🗑️ Clear All", use_container_width=True):
+                if st.button("🗑️ Xóa Tất Cả", use_container_width=True):
                     st.session_state.batch_rows = [
-                        {'select': True, 'url': '', 'keyword': '', 'status': '⏳ Pending', 'title': '', 'post_url': ''}
+                        {'select': True, 'url': '', 'keyword': '', 'status': '⏳ Đang Chờ', 'title': '', 'post_url': ''}
                         for _ in range(5)
                     ]
                     st.rerun()
@@ -1815,10 +1815,10 @@ elif page == "Batch Publish":
             with col3:
                 # Count valid URLs
                 valid_count = sum(1 for r in st.session_state.batch_rows if r['select'] and r['url'].strip())
-                st.caption(f"📊 {valid_count} selected")
+                st.caption(f"📊 {valid_count} đã chọn")
 
             with col4:
-                process_btn = st.button("▶️ Process", type="primary", use_container_width=True)
+                process_btn = st.button("▶️ Xử Lý", type="primary", use_container_width=True)
 
             if process_btn:
                 # Get rows to process
@@ -1826,7 +1826,7 @@ elif page == "Batch Publish":
                                    if r['select'] and r['url'].strip()]
 
                 if not rows_to_process:
-                    st.warning("No URLs selected. Add URLs and check the Select box.")
+                    st.warning("Chưa chọn URL nào. Thêm URL và đánh dấu ô Chọn.")
                 else:
                     progress_bar = st.progress(0)
                     status_text = st.empty()
@@ -1839,10 +1839,10 @@ elif page == "Batch Publish":
                         url = row['url'].strip()
                         keyword = row.get('keyword', '').strip()
                         progress_bar.progress((j + 1) / total)
-                        status_text.text(f"Processing {j + 1}/{total}...")
+                        status_text.text(f"Đang xử lý {j + 1}/{total}...")
 
                         # Update status
-                        st.session_state.batch_rows[idx]['status'] = '🔄 Processing...'
+                        st.session_state.batch_rows[idx]['status'] = '🔄 Đang Xử Lý...'
 
                         try:
                             result = execute_publishing_workflow(
@@ -1852,41 +1852,41 @@ elif page == "Batch Publish":
                             )
 
                             if result['success']:
-                                st.session_state.batch_rows[idx]['status'] = '✅ Success'
+                                st.session_state.batch_rows[idx]['status'] = '✅ Thành Công'
                                 st.session_state.batch_rows[idx]['title'] = result.get('post_title', '')
                                 st.session_state.batch_rows[idx]['post_url'] = result.get('post_url', '')
                                 success_count += 1
                             else:
                                 error_msg = result.get('error', 'Unknown')[:25]
-                                st.session_state.batch_rows[idx]['status'] = f'❌ Failed'
+                                st.session_state.batch_rows[idx]['status'] = f'❌ Thất Bại'
                                 failed_count += 1
 
                         except Exception as e:
-                            st.session_state.batch_rows[idx]['status'] = f'❌ Error'
+                            st.session_state.batch_rows[idx]['status'] = f'❌ Lỗi'
                             failed_count += 1
 
                     progress_bar.progress(1.0)
                     status_text.empty()
 
                     if success_count > 0:
-                        st.success(f"✅ Published {success_count} post(s)!")
+                        st.success(f"✅ Đã đăng {success_count} bài viết!")
                     if failed_count > 0:
-                        st.error(f"❌ {failed_count} failed")
+                        st.error(f"❌ {failed_count} thất bại")
 
                     st.rerun()
 
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Lỗi: {e}")
 
 # ============================================
 # Footer
 # ============================================
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### Tips")
+st.sidebar.markdown("### Mẹo")
 st.sidebar.markdown("""
-1. **Any Google Docs URL works** (edit, view, or published)
-2. **Use WordPress App Password** (not regular password)
-3. **Posts are created as drafts** for safety
-4. **First run requires Google OAuth** (browser opens once)
+1. **URL Google Docs bất kỳ đều hoạt động** (edit, view, hoặc published)
+2. **Sử dụng App Password của WordPress** (không phải mật khẩu thông thường)
+3. **Bài viết được tạo dưới dạng nháp** để an toàn
+4. **Lần chạy đầu tiên cần Google OAuth** (trình duyệt mở một lần)
 """)
