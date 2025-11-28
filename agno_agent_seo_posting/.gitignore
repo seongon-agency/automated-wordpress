@@ -34,6 +34,9 @@ env/
 railway.env
 *.env
 
+# Streamlit Secrets
+.streamlit/secrets.toml
+
 # Credentials & Sensitive Files
 credentials/
 client_secret.json

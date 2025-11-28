@@ -11,8 +11,31 @@ from pathlib import Path
 import time
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables (for local development fallback)
 load_dotenv()
+
+
+def get_secret(key: str, default=None):
+    """
+    Get a secret value with fallback chain:
+    1. Streamlit secrets (st.secrets) - for Streamlit Cloud deployment
+    2. Environment variable (os.getenv) - for local development
+    3. Default value
+    """
+    # Try Streamlit secrets first
+    try:
+        if hasattr(st, 'secrets') and key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+
+    # Fall back to environment variable
+    env_value = os.getenv(key)
+    if env_value is not None:
+        return env_value
+
+    return default
+
 
 # Add src to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '')))
@@ -933,9 +956,9 @@ elif page == "AI Pattern Editor":
                                 from src.utils.pattern_modifier import modify_patterns_with_ai
 
                                 # Get API key
-                                api_key = os.getenv('ANTHROPIC_API_KEY')
+                                api_key = get_secret('ANTHROPIC_API_KEY')
                                 if not api_key:
-                                    st.error("ANTHROPIC_API_KEY not found in environment variables")
+                                    st.error("ANTHROPIC_API_KEY not found in secrets or environment variables")
                                 else:
                                     # Modify patterns
                                     result = modify_patterns_with_ai(
@@ -1206,9 +1229,9 @@ elif page == "Scan HTML Template":
                     with st.spinner("AI is analyzing HTML and generating patterns..."):
                         try:
                             # Get API key
-                            api_key = os.getenv('ANTHROPIC_API_KEY')
+                            api_key = get_secret('ANTHROPIC_API_KEY')
                             if not api_key:
-                                st.error("ANTHROPIC_API_KEY not found in environment variables")
+                                st.error("ANTHROPIC_API_KEY not found in secrets or environment variables")
                             else:
                                 # Analyze HTML with AI
                                 client = anthropic.Anthropic(api_key=api_key)

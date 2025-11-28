@@ -1,48 +1,66 @@
 """
 Project Manager - Database operations for multi-project SEO publishing system.
 
+Uses Supabase for cloud database storage (works with Streamlit Cloud deployment).
 Provides CRUD operations for projects and publishing history tracking.
-Uses JSON columns for flexible configuration storage.
 """
 
-import sqlite3
-import json
 import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from pathlib import Path
+from supabase import create_client, Client
 
 
-# Database path - defaults to data/clients.db in project root
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DEFAULT_DB_PATH = PROJECT_ROOT / 'data' / 'clients.db'
-DB_PATH = os.getenv('CLIENT_DB_PATH', str(DEFAULT_DB_PATH))
+def get_secret(key: str, default=None):
+    """
+    Get a secret value with fallback chain:
+    1. Streamlit secrets (st.secrets) - for Streamlit Cloud deployment
+    2. Environment variable (os.getenv) - for local development
+    3. Default value
+    """
+    # Try Streamlit secrets first
+    try:
+        import streamlit as st
+        if hasattr(st, 'secrets') and key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+
+    # Fall back to environment variable
+    env_value = os.getenv(key)
+    if env_value is not None:
+        return env_value
+
+    return default
 
 
-def get_connection() -> sqlite3.Connection:
-    """Get database connection with JSON support."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Return rows as dictionaries
-    return conn
+def get_supabase_client() -> Client:
+    """Get Supabase client instance."""
+    url = get_secret("SUPABASE_URL")
+    key = get_secret("SUPABASE_KEY")
+
+    if not url or not key:
+        raise ValueError(
+            "Supabase credentials not found. "
+            "Please set SUPABASE_URL and SUPABASE_KEY in .streamlit/secrets.toml or environment variables."
+        )
+
+    return create_client(url, key)
 
 
 def init_database() -> None:
-    """Initialize database with schema."""
-    schema_path = Path(__file__).parent / 'schema.sql'
-
-    with open(schema_path, 'r') as f:
-        schema_sql = f.read()
-
-    conn = get_connection()
+    """
+    Initialize database - verify connection to Supabase.
+    Tables should be created in Supabase dashboard using the SQL provided in schema.sql
+    """
     try:
-        conn.executescript(schema_sql)
-        conn.commit()
-        print(f"[OK] Database initialized: {DB_PATH}")
+        client = get_supabase_client()
+        # Test connection by fetching projects
+        client.table("projects").select("project_id").limit(1).execute()
+        print("[OK] Connected to Supabase database")
     except Exception as e:
-        print(f"[ERROR] Failed to initialize database: {e}")
+        print(f"[ERROR] Failed to connect to Supabase: {e}")
         raise
-    finally:
-        conn.close()
 
 
 # ============================================================================
@@ -68,62 +86,41 @@ def create_project(
         wordpress_url: WordPress site URL
         wordpress_username: WP username
         wordpress_app_password: WP application password
-        html_configs: Dict with HTML transformation patterns (will be stored as JSON)
-        image_configs: Dict with image processing settings (will be stored as JSON)
+        html_configs: Dict with HTML transformation patterns
+        image_configs: Dict with image processing settings
         notes: Optional notes for agent
 
     Returns:
         Dict with created project data
-
-    Example html_configs:
-        {
-            "patterns": [
-                {
-                    "element_type": "p",
-                    "source_pattern": "<p[^>]*>(.*?)</p>",
-                    "target_pattern": "<p class=\"article-body\">\\1</p>"
-                }
-            ]
-        }
-
-    Example image_configs:
-        {
-            "target_width": 800,
-            "image_quality": 92,
-            "image_format": "JPEG",
-            "css_classes": "wp-image aligncenter"
-        }
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
     try:
-        conn.execute('''
-            INSERT INTO projects (
-                project_id, project_name, wordpress_url,
-                wordpress_username, wordpress_app_password,
-                html_configs, image_configs, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            project_id,
-            project_name,
-            wordpress_url,
-            wordpress_username,
-            wordpress_app_password,
-            json.dumps(html_configs) if html_configs else None,
-            json.dumps(image_configs) if image_configs else None,
-            notes
-        ))
-        conn.commit()
+        data = {
+            "project_id": project_id,
+            "project_name": project_name,
+            "wordpress_url": wordpress_url,
+            "wordpress_username": wordpress_username,
+            "wordpress_app_password": wordpress_app_password,
+            "html_configs": html_configs,
+            "image_configs": image_configs,
+            "notes": notes,
+            "status": "active",
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
 
-        return get_project(project_id)
+        result = client.table("projects").insert(data).execute()
 
-    except sqlite3.IntegrityError:
-        raise ValueError(f"Project with ID '{project_id}' already exists")
+        if result.data:
+            return result.data[0]
+        else:
+            raise Exception("Failed to create project - no data returned")
+
     except Exception as e:
-        conn.rollback()
+        if "duplicate key" in str(e).lower() or "unique constraint" in str(e).lower():
+            raise ValueError(f"Project with ID '{project_id}' already exists")
         raise Exception(f"Failed to create project: {e}")
-    finally:
-        conn.close()
 
 
 def get_project(project_id: str) -> Dict[str, Any]:
@@ -134,32 +131,19 @@ def get_project(project_id: str) -> Dict[str, Any]:
         project_id: Project identifier
 
     Returns:
-        Dict with project data (html_configs and image_configs parsed from JSON)
+        Dict with project data
 
     Raises:
         ValueError: If project not found
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
-    try:
-        cursor = conn.execute(
-            'SELECT * FROM projects WHERE project_id = ?',
-            (project_id,)
-        )
-        row = cursor.fetchone()
+    result = client.table("projects").select("*").eq("project_id", project_id).execute()
 
-        if not row:
-            raise ValueError(f"Project '{project_id}' not found")
+    if not result.data:
+        raise ValueError(f"Project '{project_id}' not found")
 
-        # Convert row to dict and parse JSON fields
-        project = dict(row)
-        project['html_configs'] = json.loads(project['html_configs']) if project['html_configs'] else None
-        project['image_configs'] = json.loads(project['image_configs']) if project['image_configs'] else None
-
-        return project
-
-    finally:
-        conn.close()
+    return result.data[0]
 
 
 def update_project(project_id: str, **kwargs) -> Dict[str, Any]:
@@ -168,25 +152,17 @@ def update_project(project_id: str, **kwargs) -> Dict[str, Any]:
 
     Args:
         project_id: Project identifier
-        **kwargs: Fields to update (html_configs and image_configs will be JSON-encoded)
+        **kwargs: Fields to update
 
     Returns:
         Dict with updated project data
-
-    Example:
-        update_project('acme_corp', wordpress_url='https://newsite.com')
-        update_project('acme_corp', html_configs={'patterns': [...]})
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
     # Verify project exists
-    try:
-        get_project(project_id)
-    except ValueError:
-        conn.close()
-        raise
+    get_project(project_id)
 
-    # Build update query dynamically
+    # Build update data
     allowed_fields = {
         'project_name', 'wordpress_url', 'wordpress_username',
         'wordpress_app_password', 'html_configs', 'image_configs',
@@ -196,36 +172,24 @@ def update_project(project_id: str, **kwargs) -> Dict[str, Any]:
     updates = {}
     for key, value in kwargs.items():
         if key in allowed_fields:
-            # JSON-encode dict fields
-            if key in ('html_configs', 'image_configs') and isinstance(value, dict):
-                updates[key] = json.dumps(value)
-            else:
-                updates[key] = value
+            updates[key] = value
 
     if not updates:
-        conn.close()
         return get_project(project_id)
 
     # Add updated_at timestamp
     updates['updated_at'] = datetime.now().isoformat()
 
-    set_clause = ', '.join([f'{key} = ?' for key in updates.keys()])
-    values = list(updates.values()) + [project_id]
-
     try:
-        conn.execute(
-            f'UPDATE projects SET {set_clause} WHERE project_id = ?',
-            values
-        )
-        conn.commit()
+        result = client.table("projects").update(updates).eq("project_id", project_id).execute()
 
-        return get_project(project_id)
+        if result.data:
+            return result.data[0]
+        else:
+            return get_project(project_id)
 
     except Exception as e:
-        conn.rollback()
         raise Exception(f"Failed to update project: {e}")
-    finally:
-        conn.close()
 
 
 def delete_project(project_id: str) -> bool:
@@ -238,19 +202,13 @@ def delete_project(project_id: str) -> bool:
     Returns:
         True if deleted, False if not found
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
     try:
-        cursor = conn.execute(
-            'DELETE FROM projects WHERE project_id = ?',
-            (project_id,)
-        )
-        conn.commit()
-
-        return cursor.rowcount > 0
-
-    finally:
-        conn.close()
+        result = client.table("projects").delete().eq("project_id", project_id).execute()
+        return len(result.data) > 0 if result.data else False
+    except Exception:
+        return False
 
 
 def list_projects(status: str = 'active') -> List[Dict[str, Any]]:
@@ -261,33 +219,21 @@ def list_projects(status: str = 'active') -> List[Dict[str, Any]]:
         status: Filter by status ('active', 'inactive', 'testing', or 'all')
 
     Returns:
-        List of project dicts (html_configs and image_configs parsed from JSON)
+        List of project dicts
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
     try:
         if status == 'all':
-            cursor = conn.execute('SELECT * FROM projects ORDER BY project_name')
+            result = client.table("projects").select("*").order("project_name").execute()
         else:
-            cursor = conn.execute(
-                'SELECT * FROM projects WHERE status = ? ORDER BY project_name',
-                (status,)
-            )
+            result = client.table("projects").select("*").eq("status", status).order("project_name").execute()
 
-        rows = cursor.fetchall()
+        return result.data if result.data else []
 
-        # Convert rows to dicts and parse JSON fields
-        projects = []
-        for row in rows:
-            project = dict(row)
-            project['html_configs'] = json.loads(project['html_configs']) if project['html_configs'] else None
-            project['image_configs'] = json.loads(project['image_configs']) if project['image_configs'] else None
-            projects.append(project)
-
-        return projects
-
-    finally:
-        conn.close()
+    except Exception as e:
+        print(f"Error listing projects: {e}")
+        return []
 
 
 # ============================================================================
@@ -324,44 +270,38 @@ def log_publish(
     Returns:
         publish_id of created record
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
     try:
-        cursor = conn.execute('''
-            INSERT INTO publishing_history (
-                project_id, google_docs_url, wordpress_post_id,
-                wordpress_post_url, post_title, post_status,
-                images_processed, success, error_message, execution_time_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            project_id,
-            google_docs_url,
-            wordpress_post_id,
-            wordpress_post_url,
-            post_title,
-            post_status,
-            images_processed,
-            success,
-            error_message,
-            execution_time_seconds
-        ))
-        conn.commit()
+        data = {
+            "project_id": project_id,
+            "google_docs_url": google_docs_url,
+            "wordpress_post_id": wordpress_post_id,
+            "wordpress_post_url": wordpress_post_url,
+            "post_title": post_title,
+            "post_status": post_status,
+            "images_processed": images_processed,
+            "success": success,
+            "error_message": error_message,
+            "execution_time_seconds": execution_time_seconds,
+            "published_at": datetime.now().isoformat()
+        }
+
+        result = client.table("publishing_history").insert(data).execute()
 
         # Update last_published_at for project if successful
         if success and project_id:
-            conn.execute(
-                'UPDATE projects SET last_published_at = ? WHERE project_id = ?',
-                (datetime.now().isoformat(), project_id)
-            )
-            conn.commit()
+            client.table("projects").update({
+                "last_published_at": datetime.now().isoformat()
+            }).eq("project_id", project_id).execute()
 
-        return cursor.lastrowid
+        if result.data:
+            return result.data[0].get('publish_id', 0)
+        return 0
 
     except Exception as e:
-        conn.rollback()
-        raise Exception(f"Failed to log publish: {e}")
-    finally:
-        conn.close()
+        print(f"Failed to log publish: {e}")
+        return 0
 
 
 def get_publish_history(
@@ -378,25 +318,18 @@ def get_publish_history(
     Returns:
         List of publishing history records (newest first)
     """
-    conn = get_connection()
+    client = get_supabase_client()
 
     try:
+        query = client.table("publishing_history").select("*")
+
         if project_id:
-            cursor = conn.execute('''
-                SELECT * FROM publishing_history
-                WHERE project_id = ?
-                ORDER BY published_at DESC
-                LIMIT ?
-            ''', (project_id, limit))
-        else:
-            cursor = conn.execute('''
-                SELECT * FROM publishing_history
-                ORDER BY published_at DESC
-                LIMIT ?
-            ''', (limit,))
+            query = query.eq("project_id", project_id)
 
-        rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        result = query.order("published_at", desc=True).limit(limit).execute()
 
-    finally:
-        conn.close()
+        return result.data if result.data else []
+
+    except Exception as e:
+        print(f"Error getting publish history: {e}")
+        return []

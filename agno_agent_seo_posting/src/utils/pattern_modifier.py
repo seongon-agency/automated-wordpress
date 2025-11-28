@@ -18,6 +18,14 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Import get_secret for Streamlit secrets support
+try:
+    from src.config.settings import get_secret
+except ImportError:
+    # Fallback if import fails
+    def get_secret(key, default=None):
+        return os.getenv(key, default)
+
 
 def modify_patterns_with_ai(
     current_patterns: List[Dict[str, str]],
@@ -47,12 +55,12 @@ def modify_patterns_with_ai(
         >>> print(result['changes_made'])
         "Modified h2 pattern to add color: blue style"
     """
-    api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
+    api_key = api_key or get_secret('ANTHROPIC_API_KEY')
 
     if not api_key:
         return {
             "success": False,
-            "error": "No ANTHROPIC_API_KEY found in environment"
+            "error": "No ANTHROPIC_API_KEY found in secrets or environment"
         }
 
     try:

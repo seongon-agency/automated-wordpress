@@ -21,6 +21,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from src.database import get_project, log_publish
+from src.config.settings import get_secret
 from src.tools.google_docs_converter import google_docs_to_html
 from src.tools.image_processor import process_images_from_html
 from src.tools.html_transformer import transform_html
@@ -99,15 +100,15 @@ def execute_publishing_workflow(
                 }
         else:
             print("\n📁 No project selected - using defaults")
-            # Get WordPress credentials from environment
-            wordpress_url = os.getenv('WP_BASE_URL')
-            username = os.getenv('WP_USERNAME')
-            app_password = os.getenv('WP_APP_PASS')
+            # Get WordPress credentials from secrets/environment
+            wordpress_url = get_secret('WP_BASE_URL')
+            username = get_secret('WP_USERNAME')
+            app_password = get_secret('WP_APP_PASS')
 
             if not all([wordpress_url, username, app_password]):
                 return {
                     "success": False,
-                    "error": "WordPress credentials not configured. Set WP_BASE_URL, WP_USERNAME, WP_APP_PASS in .env",
+                    "error": "WordPress credentials not configured. Set WP_BASE_URL, WP_USERNAME, WP_APP_PASS in .streamlit/secrets.toml or .env",
                     "step_failed": "configuration"
                 }
 
