@@ -385,6 +385,10 @@ def execute_publishing_workflow(
         google_docs_folder_url = image_configs.get('google_docs_folder_url', '') if image_configs else ''
         google_docs_result = None
 
+        # Debug: Show Google Docs settings
+        print(f"\n   [Debug] save_html_to_google_docs: {save_html_to_google_docs}")
+        print(f"   [Debug] google_docs_folder_url: {google_docs_folder_url[:50] if google_docs_folder_url else 'Not set'}...")
+
         if save_html_to_google_docs and google_docs_folder_url:
             print("\n[7/7] 📄 Saving HTML to Google Docs...")
 

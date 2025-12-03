@@ -464,15 +464,16 @@ elif page == "Create Project":
             help="Tạo một file Google Docs chứa HTML đã xử lý sau khi đăng bài thành công. Hữu ích để lưu trữ và tham khảo."
         )
 
+        # Always show URL input (required for Streamlit form behavior)
+        google_docs_folder_url = st.text_input(
+            "URL Thư Mục Google Docs",
+            placeholder="https://drive.google.com/drive/folders/...",
+            help="Dán URL thư mục Google Drive nơi các file Google Docs HTML sẽ được lưu. Mỗi bài viết sẽ có một file riêng.",
+            disabled=not save_html_to_google_docs
+        )
+
         if save_html_to_google_docs:
-            google_docs_folder_url = st.text_input(
-                "URL Thư Mục Google Docs",
-                placeholder="https://drive.google.com/drive/folders/...",
-                help="Dán URL thư mục Google Drive nơi các file Google Docs HTML sẽ được lưu. Mỗi bài viết sẽ có một file riêng."
-            )
             st.info("📄 Sau khi đăng bài, một file Google Docs chứa HTML đã xử lý sẽ được tạo trong thư mục này.")
-        else:
-            google_docs_folder_url = ""
 
         st.markdown("### Ghi Chú (Tùy Chọn)")
 
@@ -802,16 +803,17 @@ elif page == "Edit Project":
                     help="Tạo một file Google Docs chứa HTML đã xử lý sau khi đăng bài thành công."
                 )
 
+                # Always show URL input (required for Streamlit form behavior)
+                new_google_docs_folder_url = st.text_input(
+                    "URL Thư Mục Google Docs",
+                    value=current_image_config.get('google_docs_folder_url', ''),
+                    placeholder="https://drive.google.com/drive/folders/...",
+                    help="Dán URL thư mục Google Drive nơi các file Google Docs HTML sẽ được lưu.",
+                    disabled=not new_save_html_to_google_docs
+                )
+
                 if new_save_html_to_google_docs:
-                    new_google_docs_folder_url = st.text_input(
-                        "URL Thư Mục Google Docs",
-                        value=current_image_config.get('google_docs_folder_url', ''),
-                        placeholder="https://drive.google.com/drive/folders/...",
-                        help="Dán URL thư mục Google Drive nơi các file Google Docs HTML sẽ được lưu."
-                    )
                     st.info("📄 Sau khi đăng bài, một file Google Docs chứa HTML đã xử lý sẽ được tạo trong thư mục này.")
-                else:
-                    new_google_docs_folder_url = current_image_config.get('google_docs_folder_url', '')
 
                 st.markdown("#### Ghi Chú")
 
