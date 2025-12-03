@@ -33,12 +33,8 @@ CREATE TABLE IF NOT EXISTS publishing_history (
     success BOOLEAN,
     error_message TEXT,
     execution_time_seconds REAL,
-    published_at TIMESTAMPTZ DEFAULT NOW(),
-    saved_html_docs_url TEXT                        -- URL to saved HTML Google Doc (optional)
+    published_at TIMESTAMPTZ DEFAULT NOW()
 );
-
--- To add this column to an existing database, run:
--- ALTER TABLE publishing_history ADD COLUMN IF NOT EXISTS saved_html_docs_url TEXT;
 
 -- Indexes for faster queries
 CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);

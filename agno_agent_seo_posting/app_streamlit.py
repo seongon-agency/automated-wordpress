@@ -456,25 +456,6 @@ elif page == "Create Project":
         if google_drive_folder_url:
             st.info("📁 Ảnh sẽ được sao lưu lên Google Drive trước khi tải lên WordPress. Một thư mục con được đặt tên theo tiêu đề bài viết sẽ được tạo.")
 
-        st.markdown("### Lưu HTML Vào Google Docs (Tùy Chọn)")
-
-        save_html_to_google_docs = st.checkbox(
-            "Lưu HTML Đã Xử Lý Vào Google Docs",
-            value=False,
-            help="Tạo một file Google Docs chứa HTML đã xử lý sau khi đăng bài thành công. Hữu ích để lưu trữ và tham khảo."
-        )
-
-        # Always show URL input (required for Streamlit form behavior)
-        google_docs_folder_url = st.text_input(
-            "URL Thư Mục Google Docs",
-            placeholder="https://drive.google.com/drive/folders/...",
-            help="Dán URL thư mục Google Drive nơi các file Google Docs HTML sẽ được lưu. Mỗi bài viết sẽ có một file riêng.",
-            disabled=not save_html_to_google_docs
-        )
-
-        if save_html_to_google_docs:
-            st.info("📄 Sau khi đăng bài, một file Google Docs chứa HTML đã xử lý sẽ được tạo trong thư mục này.")
-
         st.markdown("### Ghi Chú (Tùy Chọn)")
 
         notes = st.text_area(
@@ -516,9 +497,7 @@ elif page == "Create Project":
                         "enable_auto_captions": enable_auto_captions,
                         "naming_method": naming_method_key,
                         "alt_text_words": alt_text_words,
-                        "google_drive_folder_url": google_drive_folder_url.strip() if google_drive_folder_url else "",
-                        "save_html_to_google_docs": save_html_to_google_docs,
-                        "google_docs_folder_url": google_docs_folder_url.strip() if google_docs_folder_url else ""
+                        "google_drive_folder_url": google_drive_folder_url.strip() if google_drive_folder_url else ""
                     }
 
                     # Create project
@@ -795,26 +774,6 @@ elif page == "Edit Project":
                 if new_google_drive_folder_url:
                     st.info("📁 Ảnh sẽ được sao lưu lên Google Drive trước khi tải lên WordPress.")
 
-                st.markdown("#### Lưu HTML Vào Google Docs (Tùy Chọn)")
-
-                new_save_html_to_google_docs = st.checkbox(
-                    "Lưu HTML Đã Xử Lý Vào Google Docs",
-                    value=current_image_config.get('save_html_to_google_docs', False),
-                    help="Tạo một file Google Docs chứa HTML đã xử lý sau khi đăng bài thành công."
-                )
-
-                # Always show URL input (required for Streamlit form behavior)
-                new_google_docs_folder_url = st.text_input(
-                    "URL Thư Mục Google Docs",
-                    value=current_image_config.get('google_docs_folder_url', ''),
-                    placeholder="https://drive.google.com/drive/folders/...",
-                    help="Dán URL thư mục Google Drive nơi các file Google Docs HTML sẽ được lưu.",
-                    disabled=not new_save_html_to_google_docs
-                )
-
-                if new_save_html_to_google_docs:
-                    st.info("📄 Sau khi đăng bài, một file Google Docs chứa HTML đã xử lý sẽ được tạo trong thư mục này.")
-
                 st.markdown("#### Ghi Chú")
 
                 new_notes = st.text_area(
@@ -856,9 +815,7 @@ elif page == "Edit Project":
                                 'enable_auto_captions': new_enable_auto_captions,
                                 'naming_method': new_naming_method_key,
                                 'alt_text_words': new_alt_text_words,
-                                'google_drive_folder_url': new_google_drive_folder_url.strip() if new_google_drive_folder_url else "",
-                                'save_html_to_google_docs': new_save_html_to_google_docs,
-                                'google_docs_folder_url': new_google_docs_folder_url.strip() if new_google_docs_folder_url else ""
+                                'google_drive_folder_url': new_google_drive_folder_url.strip() if new_google_drive_folder_url else ""
                             },
                             'notes': new_notes if new_notes else None
                         }

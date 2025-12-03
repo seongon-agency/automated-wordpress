@@ -1,6 +1,6 @@
 # Session State - WordPress SEO Publishing System
 
-**Last Updated:** 2025-12-03
+**Last Updated:** 2025-12-02
 **Branch:** claude_lam_het
 
 ---
@@ -62,38 +62,6 @@ Translated the entire `app_streamlit.py` UI from English to Vietnamese:
 - **Image naming method save issue:** Fixed the create project form to properly save image naming method
 - **Main keyword input not appearing:** Fixed conditional logic for showing main keyword input field
 
-### 4. Save HTML to Google Docs Feature (Completed - 2025-12-03)
-
-Added a new optional feature to save the processed HTML content to a Google Docs file after publishing.
-
-**What was done:**
-- Added UI fields in Create/Edit Project forms:
-  - Checkbox: "Luu HTML Da Xu Ly Vao Google Docs"
-  - Text input: "URL Thu Muc Google Docs"
-- Created new tool: `src/tools/google_docs_creator.py`
-- Added Step 7 to publishing workflow (optional, non-blocking)
-- Updated `schema.sql` with new column for tracking
-
-**How it works:**
-1. Enable the feature in project settings
-2. Paste a Google Drive folder URL where docs should be saved
-3. After each successful publish, a Google Doc is created containing:
-   - Post title and timestamp
-   - Link to WordPress post
-   - The full processed HTML content
-
-**New settings in `image_configs` JSONB:**
-```python
-"save_html_to_google_docs": True/False
-"google_docs_folder_url": "https://drive.google.com/drive/folders/..."
-```
-
-**Files modified:**
-- `app_streamlit.py` - UI fields for the feature
-- `src/workflows/publishing_workflow.py` - Added Step 7
-- `src/tools/google_docs_creator.py` - New file
-- `src/database/schema.sql` - Added `saved_html_docs_url` column
-
 ---
 
 ## Current Application State
@@ -113,8 +81,7 @@ Opens at: http://localhost:8501
 |------|---------|
 | `app_streamlit.py` | Main Streamlit UI (fully translated to Vietnamese) |
 | `src/database/project_manager.py` | Supabase database operations |
-| `src/workflows/publishing_workflow.py` | 7-step publishing pipeline |
-| `src/tools/google_docs_creator.py` | Creates Google Docs with HTML content |
+| `src/workflows/publishing_workflow.py` | 6-step publishing pipeline |
 | `.streamlit/secrets.toml` | API keys and credentials (DO NOT COMMIT) |
 
 ### Database (Supabase)
@@ -144,9 +111,7 @@ Contains:
 ### credentials/ folder
 
 - `client_secret.json` - Google OAuth credentials
-- `token.json` - Google OAuth token (for reading Google Docs)
-- `token_drive_upload.json` - Google Drive upload token (for image backup)
-- `token_docs_creator.json` - Google Docs creator token (for saving HTML)
+- `token.json` - Google OAuth token (auto-generated on first run)
 
 ---
 
@@ -173,7 +138,6 @@ Database Layer (Supabase - PostgreSQL)
 4. Upload images to WordPress
 5. Apply HTML transformations (project-specific patterns)
 6. Create WordPress post (as draft)
-7. Save HTML to Google Docs (optional)
 
 ---
 
