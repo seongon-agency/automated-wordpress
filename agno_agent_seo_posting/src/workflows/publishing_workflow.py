@@ -33,6 +33,7 @@ from src.tools.wordpress_uploader import (
     replace_images_with_wordpress_captions
 )
 from src.tools.google_drive_uploader import upload_images_to_google_drive
+from src.tools.google_docs_creator import create_google_doc_with_html
 from src.utils.html_extractor import extract_title_from_html, clean_html_for_wordpress
 
 
@@ -376,10 +377,45 @@ def execute_publishing_workflow(
             }
 
         # Success!
-        execution_time = time.time() - start_time
-
         print(f"   ✓ Post created: {post_result['post_id']}")
         print(f"   ✓ Status: {post_result['status']}")
+
+        # STEP 7: Save HTML to Google Docs (optional, non-blocking)
+        save_html_to_google_docs = image_configs.get('save_html_to_google_docs', False) if image_configs else False
+        google_docs_folder_url = image_configs.get('google_docs_folder_url', '') if image_configs else ''
+        google_docs_result = None
+
+        if save_html_to_google_docs and google_docs_folder_url:
+            print("\n[7/7] 📄 Saving HTML to Google Docs...")
+
+            try:
+                google_docs_result = create_google_doc_with_html(
+                    folder_url=google_docs_folder_url,
+                    doc_title=post_title,
+                    html_content=final_html,
+                    wordpress_post_url=post_result['post_url']
+                )
+
+                if google_docs_result['success']:
+                    print(f"   ✓ HTML saved to Google Docs")
+                    print(f"   🔗 Document: {google_docs_result.get('doc_url', 'N/A')}")
+                else:
+                    print(f"   ⚠️  Google Docs save failed: {google_docs_result.get('error', 'Unknown error')}")
+
+            except Exception as gdocs_error:
+                # Google Docs failure should NOT block the workflow
+                print(f"   ⚠️  Google Docs save failed: {str(gdocs_error)}")
+                print(f"   ℹ️  WordPress post was created successfully.")
+                google_docs_result = {
+                    'success': False,
+                    'error': str(gdocs_error)
+                }
+
+        elif save_html_to_google_docs and not google_docs_folder_url:
+            print("\n[7/7] 📄 Google Docs save skipped (no folder URL configured)")
+        # If save_html_to_google_docs is False, silently skip
+
+        execution_time = time.time() - start_time
 
         # Log success
         log_publish(
@@ -401,7 +437,9 @@ def execute_publishing_workflow(
         print(f"🔗 Post URL: {post_result['post_url']}")
         print(f"🖼️  Images: {len(processed_images)} processed")
         if google_drive_result and google_drive_result.get('folder_url'):
-            print(f"📁 Google Drive: {google_drive_result['folder_url']}")
+            print(f"📁 Google Drive (Images): {google_drive_result['folder_url']}")
+        if google_docs_result and google_docs_result.get('doc_url'):
+            print(f"📄 Google Docs (HTML): {google_docs_result['doc_url']}")
         print(f"⏱️  Time: {execution_time:.2f}s")
         print("\n" + "="*80 + "\n")
 
@@ -420,6 +458,11 @@ def execute_publishing_workflow(
         if google_drive_result and google_drive_result.get('folder_url'):
             result['google_drive_folder_url'] = google_drive_result['folder_url']
             result['google_drive_folder_name'] = google_drive_result.get('folder_name', '')
+
+        # Add Google Docs info if available
+        if google_docs_result and google_docs_result.get('doc_url'):
+            result['google_docs_url'] = google_docs_result['doc_url']
+            result['google_docs_title'] = google_docs_result.get('doc_title', '')
 
         return result
 
