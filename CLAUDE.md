@@ -396,7 +396,15 @@ streamlit run app_streamlit.py --server.port 8502
 
 ## Documentation Files
 
+- **SESSION_STATE.md** - **READ THIS FIRST** - Current project state, recent changes, and context for continuing work
 - **README.md** - Complete overview and features
 - **SETUP.md** - Detailed installation guide
 - **HANDOFF.md** - Developer documentation and architecture
 - **START_HERE.md** - Quick reference for common tasks
+
+## Important Notes for New Sessions
+
+1. **Always read `agno_agent_seo_posting/SESSION_STATE.md` first** - Contains recent work, current state, and pending items
+2. **Database is Supabase** (cloud PostgreSQL), not SQLite
+3. **UI is in Vietnamese** - All text translated as of 2025-12-02
+4. **Credentials in `.streamlit/secrets.toml`** - Never commit this file

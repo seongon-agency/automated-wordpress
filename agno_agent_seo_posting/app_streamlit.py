@@ -565,20 +565,10 @@ elif page == "Edit Project":
             # Reset session state if project changed
             if 'edit_project_id' not in st.session_state or st.session_state.edit_project_id != selected_project_id:
                 st.session_state.edit_project_id = selected_project_id
-                # Clear ALL cached values and widget keys so they reload from database
+                # Clear cached values so they reload from database
                 keys_to_clear = [
                     'edit_resize_method',
-                    'edit_naming_method_state',
-                    # Widget keys
-                    'resize_method_selector',
-                    'naming_method_selector',
-                    'edit_fixed_width',
-                    'edit_fixed_height',
-                    'edit_fixed_quality',
-                    'edit_fixed_format',
-                    'edit_gdocs_quality',
-                    'edit_gdocs_format',
-                    'edit_alt_text_words'
+                    'edit_naming_method_state'
                 ]
                 for key in keys_to_clear:
                     if key in st.session_state:
@@ -610,8 +600,7 @@ elif page == "Edit Project":
                 "Chọn cách thay đổi kích thước ảnh",
                 options=edit_resize_options,
                 index=current_edit_index,
-                help="Chiều Rộng Cố Định: Tùy chỉnh kích thước theo chiều rộng (và chiều cao tùy chọn). Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc (chất lượng tốt nhất).",
-                key="resize_method_selector"
+                help="Chiều Rộng Cố Định: Tùy chỉnh kích thước theo chiều rộng (và chiều cao tùy chọn). Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc (chất lượng tốt nhất)."
             )
             # Update session state
             st.session_state.edit_resize_method = new_resize_method
@@ -641,8 +630,7 @@ elif page == "Edit Project":
                 "Chọn cách đặt tên ảnh",
                 options=edit_naming_options,
                 index=current_naming_index,
-                help="Mặc Định: Sử dụng tên dự án. Theo Alt Text: Sử dụng alt text của ảnh. Theo Từ Khóa Chính: Bạn cung cấp từ khóa khi đăng bài.",
-                key="naming_method_selector"
+                help="Mặc Định: Sử dụng tên dự án. Theo Alt Text: Sử dụng alt text của ảnh. Theo Từ Khóa Chính: Bạn cung cấp từ khóa khi đăng bài."
             )
             # Update session state
             st.session_state.edit_naming_method_state = new_naming_method_outside
@@ -850,22 +838,11 @@ elif page == "Edit Project":
                         with st.spinner("Đang lưu thay đổi..."):
                             result = update_project(selected_project_id, **updates)
 
-                        # Clear ALL session state keys related to edit form FIRST
-                        # This includes both tracking variables AND widget keys
+                        # Clear session state keys so next load reads from database
                         keys_to_clear = [
                             'edit_naming_method_state',
                             'edit_resize_method',
-                            'edit_project_id',
-                            # Widget keys - must be cleared to reload from database
-                            'resize_method_selector',
-                            'naming_method_selector',
-                            'edit_fixed_width',
-                            'edit_fixed_height',
-                            'edit_fixed_quality',
-                            'edit_fixed_format',
-                            'edit_gdocs_quality',
-                            'edit_gdocs_format',
-                            'edit_alt_text_words'
+                            'edit_project_id'
                         ]
                         for key in keys_to_clear:
                             if key in st.session_state:
