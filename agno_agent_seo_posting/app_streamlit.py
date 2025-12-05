@@ -458,17 +458,6 @@ elif page == "Create Project":
             help="Tự động bọc ảnh với shortcode [caption] của WordPress. Tắt nếu bạn muốn kiểm soát định dạng caption bằng HTML patterns."
         )
 
-        st.markdown("### Sao Lưu Google Drive (Tùy Chọn)")
-
-        google_drive_folder_url = st.text_input(
-            "URL Thư Mục Google Drive",
-            placeholder="https://drive.google.com/drive/folders/...",
-            help="Tùy chọn: Dán URL thư mục Google Drive để tự động sao lưu ảnh. Một thư mục con sẽ được tạo cho mỗi bài viết."
-        )
-
-        if google_drive_folder_url:
-            st.info("📁 Ảnh sẽ được sao lưu lên Google Drive trước khi tải lên WordPress. Một thư mục con được đặt tên theo tiêu đề bài viết sẽ được tạo.")
-
         st.markdown("### Ghi Chú (Tùy Chọn)")
 
         notes = st.text_area(
@@ -513,8 +502,7 @@ elif page == "Create Project":
                         "image_format": image_format,
                         "enable_auto_captions": enable_auto_captions,
                         "naming_method": naming_method_key,
-                        "alt_text_words": alt_text_words,
-                        "google_drive_folder_url": google_drive_folder_url.strip() if google_drive_folder_url else ""
+                        "alt_text_words": alt_text_words
                     }
 
                     # Create project
@@ -577,11 +565,24 @@ elif page == "Edit Project":
             # Reset session state if project changed
             if 'edit_project_id' not in st.session_state or st.session_state.edit_project_id != selected_project_id:
                 st.session_state.edit_project_id = selected_project_id
-                # Clear cached values so they reload from database
-                if 'edit_resize_method' in st.session_state:
-                    del st.session_state.edit_resize_method
-                if 'edit_naming_method_state' in st.session_state:
-                    del st.session_state.edit_naming_method_state
+                # Clear ALL cached values and widget keys so they reload from database
+                keys_to_clear = [
+                    'edit_resize_method',
+                    'edit_naming_method_state',
+                    # Widget keys
+                    'resize_method_selector',
+                    'naming_method_selector',
+                    'edit_fixed_width',
+                    'edit_fixed_height',
+                    'edit_fixed_quality',
+                    'edit_fixed_format',
+                    'edit_gdocs_quality',
+                    'edit_gdocs_format',
+                    'edit_alt_text_words'
+                ]
+                for key in keys_to_clear:
+                    if key in st.session_state:
+                        del st.session_state[key]
 
             st.markdown("---")
             st.markdown(f"### Đang Chỉnh Sửa: **{current_project['project_name']}**")
@@ -792,18 +793,6 @@ elif page == "Edit Project":
                     help="Tự động bọc ảnh với shortcode [caption] của WordPress. Tắt nếu bạn muốn kiểm soát định dạng caption bằng HTML patterns."
                 )
 
-                st.markdown("#### Sao Lưu Google Drive (Tùy Chọn)")
-
-                new_google_drive_folder_url = st.text_input(
-                    "URL Thư Mục Google Drive",
-                    value=current_image_config.get('google_drive_folder_url', ''),
-                    placeholder="https://drive.google.com/drive/folders/...",
-                    help="Tùy chọn: Dán URL thư mục Google Drive để tự động sao lưu ảnh. Một thư mục con sẽ được tạo cho mỗi bài viết."
-                )
-
-                if new_google_drive_folder_url:
-                    st.info("📁 Ảnh sẽ được sao lưu lên Google Drive trước khi tải lên WordPress.")
-
                 st.markdown("#### Ghi Chú")
 
                 new_notes = st.text_area(
@@ -848,8 +837,7 @@ elif page == "Edit Project":
                                 'image_format': new_image_format,
                                 'enable_auto_captions': new_enable_auto_captions,
                                 'naming_method': new_naming_method_key,
-                                'alt_text_words': new_alt_text_words,
-                                'google_drive_folder_url': new_google_drive_folder_url.strip() if new_google_drive_folder_url else ""
+                                'alt_text_words': new_alt_text_words
                             },
                             'notes': new_notes if new_notes else None
                         }
@@ -862,20 +850,30 @@ elif page == "Edit Project":
                         with st.spinner("Đang lưu thay đổi..."):
                             result = update_project(selected_project_id, **updates)
 
-                        st.success("Cập nhật dự án thành công!")
-                        st.balloons()
+                        # Clear ALL session state keys related to edit form FIRST
+                        # This includes both tracking variables AND widget keys
+                        keys_to_clear = [
+                            'edit_naming_method_state',
+                            'edit_resize_method',
+                            'edit_project_id',
+                            # Widget keys - must be cleared to reload from database
+                            'resize_method_selector',
+                            'naming_method_selector',
+                            'edit_fixed_width',
+                            'edit_fixed_height',
+                            'edit_fixed_quality',
+                            'edit_fixed_format',
+                            'edit_gdocs_quality',
+                            'edit_gdocs_format',
+                            'edit_alt_text_words'
+                        ]
+                        for key in keys_to_clear:
+                            if key in st.session_state:
+                                del st.session_state[key]
 
-                        # Clear session state so next edit reloads from database
-                        if 'edit_naming_method_state' in st.session_state:
-                            del st.session_state.edit_naming_method_state
-                        if 'edit_resize_method' in st.session_state:
-                            del st.session_state.edit_resize_method
-                        if 'edit_project_id' in st.session_state:
-                            del st.session_state.edit_project_id
-
-                        # Show what changed
-                        with st.expander("Chi Tiết Dự Án Đã Cập Nhật"):
-                            st.json(result)
+                        # Show success and rerun to reload fresh data
+                        st.toast("Cập nhật dự án thành công!", icon="✅")
+                        st.rerun()
 
                     except Exception as e:
                         st.error(f"Cập nhật dự án thất bại: {e}")
