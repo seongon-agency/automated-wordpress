@@ -532,6 +532,12 @@ elif page == "Create Project":
 
 elif page == "Edit Project":
     st.title("Chỉnh Sửa Dự Án")
+
+    # Show success message if save was successful
+    if st.session_state.get('edit_save_success'):
+        st.success("✅ Thay đổi thành công! Cấu hình dự án đã được cập nhật.")
+        del st.session_state.edit_save_success
+
     st.markdown("---")
 
     st.markdown("""
@@ -848,8 +854,8 @@ elif page == "Edit Project":
                             if key in st.session_state:
                                 del st.session_state[key]
 
-                        # Show success and rerun to reload fresh data
-                        st.toast("Cập nhật dự án thành công!", icon="✅")
+                        # Set success flag and rerun to show message
+                        st.session_state.edit_save_success = True
                         st.rerun()
 
                     except Exception as e:
