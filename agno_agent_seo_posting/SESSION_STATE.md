@@ -70,6 +70,19 @@ Streamlit widgets with `key` parameter persist values independently. The `index`
 
 ---
 
+#### Change #4: Added Success Message After Saving Project
+**Commit:** `1d653ab`
+
+**What changed:**
+- Added visible success message "Thay đổi thành công!" at top of Edit Project page after saving
+- Uses session state flag (`edit_save_success`) to persist message across page rerun
+- Message auto-clears after being displayed once
+
+**Files modified:**
+- `app_streamlit.py` (lines 536-539, 851-852)
+
+---
+
 ### 2025-12-02 (Previous Session)
 
 #### Vietnamese Translation (Completed)
@@ -197,6 +210,7 @@ Database Layer (Supabase - PostgreSQL)
 - `edit_project_id` - Currently selected project
 - `edit_resize_method` - Current resize method selection
 - `edit_naming_method_state` - Current naming method selection
+- `edit_save_success` - Flag to show success message after save
 
 ---
 
