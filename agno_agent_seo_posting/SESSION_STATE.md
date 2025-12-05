@@ -1,66 +1,84 @@
 # Session State - WordPress SEO Publishing System
 
-**Last Updated:** 2025-12-02
+**Last Updated:** 2025-12-05
 **Branch:** claude_lam_het
+**Current Version:** v2.1.0
 
 ---
 
 ## Project Overview
 
-This is a **WordPress SEO Publishing System** that automates publishing from Google Docs to WordPress with AI-powered HTML transformation. The main application is a Streamlit web app.
+This is a **WordPress SEO Publishing System** that automates publishing from Google Docs to WordPress with AI-powered HTML transformation. The main application is a Streamlit web app deployed on Streamlit Cloud.
 
-**Current Version:** v2.0.0 (Streamlit-based multi-project system)
+**Deployment:** https://github.com/seongon-agency/automated-wordpress (Streamlit Cloud)
 
 ---
 
-## Recent Work Completed
+## Recent Changes Log
 
-### 1. Migration from SQLite to Supabase (Completed)
+### 2025-12-05
 
-- **Why:** To enable cloud deployment on Streamlit Cloud (SQLite doesn't persist on Streamlit Cloud)
-- **What was done:**
-  - Updated `src/database/project_manager.py` to use Supabase instead of SQLite
-  - Updated `src/database/schema.sql` with PostgreSQL/Supabase syntax
-  - Created `migrate_to_supabase.py` migration script
-  - Successfully migrated **5 projects** and **94 publishing history records**
+#### Change #1: Enhanced Image Resize Options
+**Commits:** `57dbc62`, `af4be82`
 
-**Supabase Configuration:**
-- URL: `https://znrdcqyximcpprljcbzi.supabase.co`
-- Tables: `projects`, `publishing_history`
-- Credentials stored in `.streamlit/secrets.toml`
+**What changed:**
+- Modified "Fixed Width" resize option to support both width AND height
+- Added height input field in Create/Edit Project forms
+- Behavior:
+  - Only width provided → proportional resize (original behavior)
+  - Both width and height provided → exact dimensions resize
 
-### 2. Full Vietnamese Translation (Completed - 2025-12-02)
+**Files modified:**
+- `app_streamlit.py` - Create Project form (lines 342-383)
+- `app_streamlit.py` - Edit Project form (lines 690-731)
+- `app_streamlit.py` - Form submission logic
 
-Translated the entire `app_streamlit.py` UI from English to Vietnamese:
+**UI Labels:**
+- Section renamed: "Cài Đặt Chiều Rộng Cố Định" → "Cài Đặt Kích Thước Tùy Chỉnh"
+- New field: "Chiều Cao Ảnh (px)" (value 0 = proportional)
 
-- Page config and sidebar navigation
-- Home page content
-- Projects page content
-- Create Project page content
-- Edit Project page content
-- AI Pattern Editor page content
-- Scan HTML Template page content
-- Publish Content page content
-- Batch Publish page content
-- Publishing History and Footer
+---
 
-**Important:** Conditional checks were updated to use Vietnamese option labels:
-```python
-# Resize method options
-"Chiều Rộng Cố Định" -> resize_method_key = "fixed_width"
-"Kích Thước Gốc Google Docs" -> resize_method_key = "google_docs_original"
-"Không Thay Đổi (Chất Lượng Gốc)" -> resize_method_key = "no_resize"
+#### Change #2: Removed Google Drive Backup Feature
+**Commit:** `57dbc62`
 
-# Naming method options
-"Mặc Định (tên_dự_án)" -> naming_method_key = "default"
-"Theo Alt Text" -> naming_method_key = "alt_text"
-"Theo Từ Khóa Chính" -> naming_method_key = "main_keyword"
-```
+**What changed:**
+- Removed Google Drive folder URL input from Create Project form
+- Removed Google Drive folder URL input from Edit Project form
+- Removed `google_drive_folder_url` from image_configs
 
-### 3. Bug Fixes Applied
+**Reason:** Feature was not being used
 
-- **Image naming method save issue:** Fixed the create project form to properly save image naming method
-- **Main keyword input not appearing:** Fixed conditional logic for showing main keyword input field
+---
+
+#### Change #3: Fixed Radio Button State Persistence Bug
+**Commit:** `fc0b0b8`
+
+**Problem:**
+After saving project settings, radio buttons (resize method, naming method) showed old values instead of saved values.
+
+**Root Cause:**
+Streamlit widgets with `key` parameter persist values independently. The `index` parameter is ignored when a `key` exists in session state.
+
+**Solution:**
+- Removed `key="resize_method_selector"` from resize method radio
+- Removed `key="naming_method_selector"` from naming method radio
+- Radio widgets now use `index` parameter correctly
+
+**Files modified:**
+- `app_streamlit.py` (lines 609-614, 639-644, 565-575, 841-853)
+
+---
+
+### 2025-12-02 (Previous Session)
+
+#### Vietnamese Translation (Completed)
+- Translated entire `app_streamlit.py` UI from English to Vietnamese
+- Updated conditional checks to use Vietnamese option labels
+
+#### Database Migration (Completed)
+- Migrated from SQLite to Supabase for Streamlit Cloud deployment
+- 5 projects and 94 publishing history records migrated
 
 ---
 
@@ -79,39 +97,55 @@ Opens at: http://localhost:8501
 
 | File | Purpose |
 |------|---------|
-| `app_streamlit.py` | Main Streamlit UI (fully translated to Vietnamese) |
+| `app_streamlit.py` | Main Streamlit UI (Vietnamese) |
 | `src/database/project_manager.py` | Supabase database operations |
 | `src/workflows/publishing_workflow.py` | 6-step publishing pipeline |
+| `src/tools/image_processor.py` | Image download, resize, upload |
 | `.streamlit/secrets.toml` | API keys and credentials (DO NOT COMMIT) |
-
-### Database (Supabase)
-
-- **Projects table:** Stores WordPress site configs, HTML patterns, image settings
-- **Publishing history:** Audit log of all publish attempts
-
-### Existing Projects in Database
-
-5 projects migrated from SQLite:
-1. Check Supabase dashboard for current projects
-2. Or use the "Danh Sách Dự Án" page in the app
+| `SESSION_STATE.md` | This file - project state tracking |
 
 ---
 
-## Configuration Files
+## image_configs Structure
 
-### .streamlit/secrets.toml (DO NOT COMMIT)
+```json
+{
+  "resize_method": "fixed_width" | "google_docs_original" | "no_resize",
+  "target_width": 800,
+  "target_height": null,
+  "image_quality": 92,
+  "image_format": "JPEG" | "PNG" | "WEBP",
+  "enable_auto_captions": true,
+  "naming_method": "default" | "alt_text" | "main_keyword",
+  "alt_text_words": 5
+}
+```
 
-Contains:
-- `SUPABASE_URL` and `SUPABASE_KEY` - Database credentials
-- `ANTHROPIC_API_KEY` - For AI features
-- `WP_BASE_URL`, `WP_USERNAME`, `WP_APP_PASS` - Default WordPress
-- `DRIVE_FOLDER_ID` - Google Drive folder
-- Image processing defaults
+### Resize Methods
 
-### credentials/ folder
+| UI Label (Vietnamese) | Backend Key | Behavior |
+|----------------------|-------------|----------|
+| Chiều Rộng Cố Định | `fixed_width` | Resize to target_width (and optional target_height) |
+| Kích Thước Gốc Google Docs | `google_docs_original` | Use dimensions from Google Docs HTML |
+| Không Thay Đổi (Chất Lượng Gốc) | `no_resize` | Copy original images without processing |
 
-- `client_secret.json` - Google OAuth credentials
-- `token.json` - Google OAuth token (auto-generated on first run)
+### Naming Methods
+
+| UI Label (Vietnamese) | Backend Key |
+|----------------------|-------------|
+| Mặc Định (tên_dự_án) | `default` |
+| Theo Alt Text | `alt_text` |
+| Theo Từ Khóa Chính | `main_keyword` |
+
+---
+
+## Database (Supabase)
+
+**Tables:**
+- `projects` - WordPress site configs, HTML patterns, image settings
+- `publishing_history` - Audit log of all publish attempts
+
+**Credentials:** Stored in `.streamlit/secrets.toml`
 
 ---
 
@@ -133,9 +167,8 @@ Database Layer (Supabase - PostgreSQL)
 
 1. Convert Google Docs to HTML
 2. Extract title and clean HTML
-3. Process images (download & resize)
-3.5. Upload images to Google Drive (optional)
-4. Upload images to WordPress
+3. Process images (download & resize based on project settings)
+4. Upload images to WordPress media library
 5. Apply HTML transformations (project-specific patterns)
 6. Create WordPress post (as draft)
 
@@ -143,16 +176,51 @@ Database Layer (Supabase - PostgreSQL)
 
 ## Known Issues / Pending Items
 
-- None currently pending
-- All translation tasks completed
-- Database migration completed
+### Resolved
+- [x] Radio button state not persisting after save (fixed 2025-12-05)
+- [x] Vietnamese translation completed (2025-12-02)
+- [x] SQLite to Supabase migration (2025-12-02)
+
+### Open
+- [ ] None currently tracked
+
+---
+
+## Important Implementation Notes
+
+### Streamlit Session State
+- **DO NOT use `key` parameter** on radio buttons that need to reflect database values
+- Use `index` parameter with session state tracking instead
+- Always clear relevant session state keys before `st.rerun()`
+
+### Session State Keys Used (Edit Project)
+- `edit_project_id` - Currently selected project
+- `edit_resize_method` - Current resize method selection
+- `edit_naming_method_state` - Current naming method selection
+
+---
+
+## Configuration Files
+
+### .streamlit/secrets.toml (DO NOT COMMIT)
+
+Contains:
+- `SUPABASE_URL` and `SUPABASE_KEY` - Database credentials
+- `ANTHROPIC_API_KEY` - For AI features
+- `WP_BASE_URL`, `WP_USERNAME`, `WP_APP_PASS` - Default WordPress
+- Image processing defaults
+
+### credentials/ folder
+
+- `client_secret.json` - Google OAuth credentials
+- `token.json` - Google OAuth token (auto-generated on first run)
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Run the app
+# Run the app locally
 cd agno_agent_seo_posting
 streamlit run app_streamlit.py
 
@@ -165,6 +233,12 @@ rm -rf raw_images/* resized_images/*
 
 # Kill stuck Streamlit processes
 pkill -f streamlit
+
+# Check git status
+git status
+
+# Push changes to trigger Streamlit Cloud redeploy
+git add -A && git commit -m "message" && git push
 ```
 
 ---
@@ -173,16 +247,32 @@ pkill -f streamlit
 
 When starting a new session:
 
-1. Read this file first: `SESSION_STATE.md`
-2. Read `CLAUDE.md` for full project documentation
-3. The app is in Vietnamese - all UI text has been translated
-4. Database is Supabase (cloud), not SQLite
+1. **Read this file first:** `SESSION_STATE.md`
+2. **Read `CLAUDE.md`** for full project documentation
+3. The app UI is in **Vietnamese**
+4. Database is **Supabase** (cloud PostgreSQL), not SQLite
 5. Main entry point is `app_streamlit.py`
+6. After code changes, **commit and push** to deploy to Streamlit Cloud
 
-**Git status at session end:**
-- Branch: `claude_lam_het`
-- Uncommitted changes: Vietnamese translation in `app_streamlit.py`
-- Several test files and documentation files staged
+---
+
+## Change Log Template
+
+Use this template when recording new changes:
+
+```markdown
+#### Change #N: [Brief Title]
+**Commit:** `[hash]`
+
+**What changed:**
+- [Description]
+
+**Why:**
+- [Reason]
+
+**Files modified:**
+- `filename.py` (description)
+```
 
 ---
 
