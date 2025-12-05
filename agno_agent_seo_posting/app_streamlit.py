@@ -294,7 +294,7 @@ elif page == "Create Project":
         "Chọn cách thay đổi kích thước ảnh",
         options=resize_options,
         index=current_index,
-        help="Chiều Rộng Cố Định: Thay đổi kích thước tất cả ảnh theo chiều rộng cụ thể. Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc không xử lý (chất lượng tốt nhất).",
+        help="Chiều Rộng Cố Định: Tùy chỉnh kích thước theo chiều rộng (và chiều cao tùy chọn). Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc không xử lý (chất lượng tốt nhất).",
         key="create_resize_method_selector"
     )
     # Update session state
@@ -340,19 +340,31 @@ elif page == "Create Project":
 
         # Show different settings based on resize method from session state
         if st.session_state.create_resize_method == "Chiều Rộng Cố Định":
-            st.markdown("#### Cài Đặt Chiều Rộng Cố Định")
+            st.markdown("#### Cài Đặt Kích Thước Tùy Chỉnh")
+            st.info("💡 Nếu chỉ nhập chiều rộng, chiều cao sẽ được tính tự động theo tỷ lệ. Nếu nhập cả hai, ảnh sẽ được thay đổi kích thước chính xác theo giá trị đã nhập.")
+
             col1, col2 = st.columns(2)
 
             with col1:
                 image_width = st.number_input(
-                    "Chiều Rộng Ảnh Mục Tiêu (px)",
+                    "Chiều Rộng Ảnh (px) *",
                     min_value=100,
                     max_value=2000,
                     value=800,
                     key="create_fixed_width",
-                    help="Ảnh sẽ được thay đổi kích thước theo chiều rộng này, giữ nguyên tỷ lệ"
+                    help="Bắt buộc: Chiều rộng mục tiêu cho ảnh"
                 )
 
+                image_height = st.number_input(
+                    "Chiều Cao Ảnh (px)",
+                    min_value=0,
+                    max_value=2000,
+                    value=0,
+                    key="create_fixed_height",
+                    help="Tùy chọn: Để trống (0) để giữ tỷ lệ tự động, hoặc nhập giá trị cụ thể"
+                )
+
+            with col2:
                 image_quality = st.slider(
                     "Chất Lượng Ảnh (%)",
                     min_value=50,
@@ -362,7 +374,6 @@ elif page == "Create Project":
                     help="Cao hơn = chất lượng tốt hơn nhưng file lớn hơn"
                 )
 
-            with col2:
                 image_format = st.selectbox(
                     "Định Dạng Ảnh",
                     options=["JPEG", "PNG", "WEBP"],
@@ -396,8 +407,9 @@ elif page == "Create Project":
                     help="Định dạng đầu ra cho ảnh đã xử lý"
                 )
 
-            # Set default width for backend (not used in google_docs_original mode)
+            # Set defaults for backend (not used in google_docs_original mode)
             image_width = 800
+            image_height = None
 
         else:
             # No Resize (Original Quality)
@@ -407,6 +419,7 @@ elif page == "Create Project":
 
             # Set defaults (not used in no_resize mode)
             image_width = 800
+            image_height = None
             image_quality = 100
             image_format = "PNG"
 
@@ -489,9 +502,13 @@ elif page == "Create Project":
                     elif naming_method == "Theo Từ Khóa Chính":
                         naming_method_key = "main_keyword"
 
+                    # Convert image_height of 0 to None (for proportional resizing)
+                    target_height = image_height if image_height and image_height > 0 else None
+
                     image_configs = {
                         "resize_method": resize_method_key,
                         "target_width": image_width,
+                        "target_height": target_height,
                         "image_quality": image_quality,
                         "image_format": image_format,
                         "enable_auto_captions": enable_auto_captions,
@@ -592,7 +609,7 @@ elif page == "Edit Project":
                 "Chọn cách thay đổi kích thước ảnh",
                 options=edit_resize_options,
                 index=current_edit_index,
-                help="Chiều Rộng Cố Định: Thay đổi theo chiều rộng cụ thể. Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc (chất lượng tốt nhất).",
+                help="Chiều Rộng Cố Định: Tùy chỉnh kích thước theo chiều rộng (và chiều cao tùy chọn). Kích Thước Gốc Google Docs: Sử dụng kích thước từ Google Docs. Không Thay Đổi: Tải ảnh gốc (chất lượng tốt nhất).",
                 key="resize_method_selector"
             )
             # Update session state
@@ -671,19 +688,31 @@ elif page == "Edit Project":
 
                 # Show different settings based on resize method from session state
                 if st.session_state.edit_resize_method == "Chiều Rộng Cố Định":
-                    st.markdown("##### Cài Đặt Chiều Rộng Cố Định")
+                    st.markdown("##### Cài Đặt Kích Thước Tùy Chỉnh")
+                    st.info("💡 Nếu chỉ nhập chiều rộng, chiều cao sẽ được tính tự động theo tỷ lệ. Nếu nhập cả hai, ảnh sẽ được thay đổi kích thước chính xác theo giá trị đã nhập.")
+
                     col1, col2 = st.columns(2)
 
                     with col1:
                         new_image_width = st.number_input(
-                            "Chiều Rộng Ảnh Mục Tiêu (px)",
+                            "Chiều Rộng Ảnh (px) *",
                             min_value=100,
                             max_value=2000,
                             value=current_image_config.get('target_width', 800),
                             key="edit_fixed_width",
-                            help="Ảnh sẽ được thay đổi kích thước theo chiều rộng này, giữ nguyên tỷ lệ"
+                            help="Bắt buộc: Chiều rộng mục tiêu cho ảnh"
                         )
 
+                        new_image_height = st.number_input(
+                            "Chiều Cao Ảnh (px)",
+                            min_value=0,
+                            max_value=2000,
+                            value=current_image_config.get('target_height') or 0,
+                            key="edit_fixed_height",
+                            help="Tùy chọn: Để trống (0) để giữ tỷ lệ tự động, hoặc nhập giá trị cụ thể"
+                        )
+
+                    with col2:
                         new_image_quality = st.slider(
                             "Chất Lượng Ảnh (%)",
                             min_value=50,
@@ -693,7 +722,6 @@ elif page == "Edit Project":
                             help="Cao hơn = chất lượng tốt hơn nhưng file lớn hơn"
                         )
 
-                    with col2:
                         new_image_format = st.selectbox(
                             "Định Dạng Ảnh",
                             options=["JPEG", "PNG", "WEBP"],
@@ -727,8 +755,9 @@ elif page == "Edit Project":
                             help="Định dạng đầu ra cho ảnh đã xử lý"
                         )
 
-                    # Keep existing width value (not used in google_docs_original mode)
+                    # Keep existing values (not used in google_docs_original mode)
                     new_image_width = current_image_config.get('target_width', 800)
+                    new_image_height = None
 
                 else:
                     # No Resize (Original Quality)
@@ -738,6 +767,7 @@ elif page == "Edit Project":
 
                     # Set defaults (not used in no_resize mode)
                     new_image_width = current_image_config.get('target_width', 800)
+                    new_image_height = None
                     new_image_quality = 100
                     new_image_format = current_image_config.get('image_format', 'PNG')
 
@@ -803,6 +833,9 @@ elif page == "Edit Project":
                         elif st.session_state.edit_naming_method_state == "Theo Từ Khóa Chính":
                             new_naming_method_key = "main_keyword"
 
+                        # Convert image_height of 0 to None (for proportional resizing)
+                        target_height_value = new_image_height if new_image_height and new_image_height > 0 else None
+
                         updates = {
                             'project_name': new_project_name,
                             'wordpress_url': new_wp_url,
@@ -810,6 +843,7 @@ elif page == "Edit Project":
                             'image_configs': {
                                 'resize_method': new_resize_method_key,
                                 'target_width': new_image_width,
+                                'target_height': target_height_value,
                                 'image_quality': new_image_quality,
                                 'image_format': new_image_format,
                                 'enable_auto_captions': new_enable_auto_captions,
