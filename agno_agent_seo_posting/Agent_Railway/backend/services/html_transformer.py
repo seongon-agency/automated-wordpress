@@ -6,7 +6,7 @@ Uses the pattern engine for regex-based transformations.
 """
 
 from typing import Dict, Optional, Any
-from ..utils.pattern_engine import transform_html_with_config
+from utils.pattern_engine import transform_html_with_config
 
 
 def transform_html(

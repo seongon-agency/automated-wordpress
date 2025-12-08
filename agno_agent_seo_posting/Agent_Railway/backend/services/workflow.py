@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from ..database import get_project, log_publish
+from database import get_project, log_publish
 from .google_docs import google_docs_to_html
 from .image_processor import process_images_from_html
 from .html_transformer import transform_html
@@ -24,7 +24,7 @@ from .wordpress import (
     extract_image_metadata_from_html,
     replace_images_with_wordpress_captions
 )
-from ..utils.html_extractor import extract_title_from_html, clean_html_for_wordpress
+from utils.html_extractor import extract_title_from_html, clean_html_for_wordpress
 
 
 def get_secret(key: str, default=None):
