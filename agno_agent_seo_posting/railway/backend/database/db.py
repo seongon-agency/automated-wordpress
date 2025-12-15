@@ -2,15 +2,34 @@
 Database Connection Module
 
 Uses Railway PostgreSQL database with raw SQL queries.
+Passwords are encrypted at rest using Fernet symmetric encryption.
 """
 
 import os
 import json
+import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from contextlib import contextmanager
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+# Import encryption utilities
+try:
+    from utils.encryption import encrypt_password, decrypt_password, is_encrypted
+    ENCRYPTION_AVAILABLE = True
+except Exception as e:
+    logging.warning(f"Encryption not available: {e}. Passwords will be stored in plain text.")
+    ENCRYPTION_AVAILABLE = False
+
+    def encrypt_password(p):
+        return p
+
+    def decrypt_password(p):
+        return p
+
+    def is_encrypted(p):
+        return False
 
 
 def get_database_url() -> str:
@@ -45,10 +64,11 @@ def init_database():
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Create projects table
+            # Create projects table with user_id for multi-tenant support
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS projects (
                     project_id VARCHAR(255) PRIMARY KEY,
+                    user_id VARCHAR(255),
                     project_name VARCHAR(255) NOT NULL,
                     wordpress_url VARCHAR(500) NOT NULL,
                     wordpress_username VARCHAR(255) NOT NULL,
@@ -61,6 +81,22 @@ def init_database():
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_published_at TIMESTAMP
                 )
+            """)
+
+            # Add user_id column if it doesn't exist (for existing databases)
+            cursor.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                   WHERE table_name='projects' AND column_name='user_id') THEN
+                        ALTER TABLE projects ADD COLUMN user_id VARCHAR(255);
+                    END IF;
+                END $$;
+            """)
+
+            # Create index on user_id for faster queries
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
             """)
 
             # Create publishing_history table
@@ -92,37 +128,67 @@ def init_database():
 # Project CRUD Operations
 # ============================================
 
-def list_projects(status: str = "active") -> List[Dict[str, Any]]:
-    """List all projects with optional status filter"""
+def _decrypt_project_password(project: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper to decrypt password in a project dict"""
+    if project and 'wordpress_app_password' in project:
+        project['wordpress_app_password'] = decrypt_password(project['wordpress_app_password'])
+    return project
+
+
+def list_projects(status: str = "active", user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """List projects with optional status and user_id filter (passwords are decrypted)"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        if status == "all":
-            cursor.execute("""
-                SELECT * FROM projects
-                ORDER BY created_at DESC
-            """)
+        if user_id:
+            # Filter by user_id for multi-tenant support
+            if status == "all":
+                cursor.execute("""
+                    SELECT * FROM projects
+                    WHERE user_id = %s
+                    ORDER BY created_at DESC
+                """, (user_id,))
+            else:
+                cursor.execute("""
+                    SELECT * FROM projects
+                    WHERE status = %s AND user_id = %s
+                    ORDER BY created_at DESC
+                """, (status, user_id))
         else:
-            cursor.execute("""
-                SELECT * FROM projects
-                WHERE status = %s
-                ORDER BY created_at DESC
-            """, (status,))
+            # No user_id filter (for admin or backward compatibility)
+            if status == "all":
+                cursor.execute("""
+                    SELECT * FROM projects
+                    ORDER BY created_at DESC
+                """)
+            else:
+                cursor.execute("""
+                    SELECT * FROM projects
+                    WHERE status = %s
+                    ORDER BY created_at DESC
+                """, (status,))
 
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        return [_decrypt_project_password(dict(row)) for row in rows]
 
 
-def get_project(project_id: str) -> Optional[Dict[str, Any]]:
-    """Get a single project by ID"""
+def get_project(project_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Get a single project by ID, optionally verify ownership (password is decrypted)"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT * FROM projects WHERE project_id = %s
-        """, (project_id,))
+
+        if user_id:
+            # Verify user owns this project
+            cursor.execute("""
+                SELECT * FROM projects WHERE project_id = %s AND user_id = %s
+            """, (project_id, user_id))
+        else:
+            cursor.execute("""
+                SELECT * FROM projects WHERE project_id = %s
+            """, (project_id,))
 
         row = cursor.fetchone()
-        return dict(row) if row else None
+        return _decrypt_project_password(dict(row)) if row else None
 
 
 def create_project(
@@ -133,29 +199,36 @@ def create_project(
     wordpress_app_password: str,
     html_configs: Optional[Dict] = None,
     image_configs: Optional[Dict] = None,
-    notes: Optional[str] = None
+    notes: Optional[str] = None,
+    user_id: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Create a new project"""
+    """Create a new project (password is encrypted before storage)"""
+    # Encrypt the password before storing
+    encrypted_password = encrypt_password(wordpress_app_password)
+
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute("""
             INSERT INTO projects (
-                project_id, project_name, wordpress_url,
+                project_id, user_id, project_name, wordpress_url,
                 wordpress_username, wordpress_app_password,
                 html_configs, image_configs, notes
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
         """, (
-            project_id, project_name, wordpress_url,
-            wordpress_username, wordpress_app_password,
+            project_id, user_id, project_name, wordpress_url,
+            wordpress_username, encrypted_password,
             json.dumps(html_configs) if html_configs else None,
             json.dumps(image_configs) if image_configs else None,
             notes
         ))
 
         row = cursor.fetchone()
-        return dict(row)
+        result = dict(row)
+        # Decrypt password in returned result for immediate use
+        result['wordpress_app_password'] = decrypt_password(result['wordpress_app_password'])
+        return result
 
 
 # Whitelist of allowed fields for update_project to prevent SQL injection
@@ -171,10 +244,10 @@ ALLOWED_UPDATE_FIELDS = {
 }
 
 
-def update_project(project_id: str, **updates) -> Optional[Dict[str, Any]]:
-    """Update a project"""
+def update_project(project_id: str, user_id: Optional[str] = None, **updates) -> Optional[Dict[str, Any]]:
+    """Update a project (password is encrypted before storage). If user_id provided, verify ownership."""
     if not updates:
-        return get_project(project_id)
+        return get_project(project_id, user_id)
 
     # Validate all fields against whitelist to prevent SQL injection
     invalid_fields = set(updates.keys()) - ALLOWED_UPDATE_FIELDS
@@ -189,6 +262,10 @@ def update_project(project_id: str, **updates) -> Optional[Dict[str, Any]]:
         if key in ['html_configs', 'image_configs']:
             set_clauses.append(f"{key} = %s")
             values.append(json.dumps(value) if value else None)
+        elif key == 'wordpress_app_password':
+            # Encrypt password before storing
+            set_clauses.append(f"{key} = %s")
+            values.append(encrypt_password(value) if value else None)
         else:
             set_clauses.append(f"{key} = %s")
             values.append(value)
@@ -200,24 +277,46 @@ def update_project(project_id: str, **updates) -> Optional[Dict[str, Any]]:
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute(f"""
-            UPDATE projects
-            SET {', '.join(set_clauses)}
-            WHERE project_id = %s
-            RETURNING *
-        """, values)
+
+        if user_id:
+            # Verify ownership before updating
+            values.append(user_id)
+            cursor.execute(f"""
+                UPDATE projects
+                SET {', '.join(set_clauses)}
+                WHERE project_id = %s AND user_id = %s
+                RETURNING *
+            """, values)
+        else:
+            cursor.execute(f"""
+                UPDATE projects
+                SET {', '.join(set_clauses)}
+                WHERE project_id = %s
+                RETURNING *
+            """, values)
 
         row = cursor.fetchone()
-        return dict(row) if row else None
+        if row:
+            result = dict(row)
+            # Decrypt password in returned result
+            result['wordpress_app_password'] = decrypt_password(result['wordpress_app_password'])
+            return result
+        return None
 
 
-def delete_project(project_id: str) -> bool:
-    """Delete a project"""
+def delete_project(project_id: str, user_id: Optional[str] = None) -> bool:
+    """Delete a project. If user_id provided, verify ownership."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("""
-            DELETE FROM projects WHERE project_id = %s
-        """, (project_id,))
+
+        if user_id:
+            cursor.execute("""
+                DELETE FROM projects WHERE project_id = %s AND user_id = %s
+            """, (project_id, user_id))
+        else:
+            cursor.execute("""
+                DELETE FROM projects WHERE project_id = %s
+            """, (project_id,))
 
         return cursor.rowcount > 0
 

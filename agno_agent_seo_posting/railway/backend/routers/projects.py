@@ -1,7 +1,7 @@
-"""Projects API Router"""
+"""Projects API Router with user_id filtering for multi-tenant support"""
 
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Any, List
 import re
@@ -28,6 +28,7 @@ class ProjectCreate(BaseModel):
     html_configs: Optional[Dict[str, Any]] = None
     image_configs: Optional[Dict[str, Any]] = None
     notes: Optional[str] = None
+    user_id: Optional[str] = None  # User ID for multi-tenant support
 
     @field_validator('project_id')
     @classmethod
@@ -139,10 +140,13 @@ def serialize_project(project: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @router.get("/")
-async def list_projects(status: str = "all"):
-    """List all projects"""
+async def list_projects(
+    status: str = "all",
+    user_id: Optional[str] = Query(None, description="Filter by user ID")
+):
+    """List all projects, optionally filtered by user_id"""
     try:
-        projects = db_list_projects(status=status)
+        projects = db_list_projects(status=status, user_id=user_id)
         return {
             "success": True,
             "projects": [serialize_project(p) for p in projects],
@@ -154,10 +158,13 @@ async def list_projects(status: str = "all"):
 
 
 @router.get("/{project_id}")
-async def get_project(project_id: str):
-    """Get project by ID"""
+async def get_project(
+    project_id: str,
+    user_id: Optional[str] = Query(None, description="Verify ownership by user ID")
+):
+    """Get project by ID, optionally verify ownership"""
     try:
-        project = db_get_project(project_id)
+        project = db_get_project(project_id, user_id=user_id)
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
 
@@ -192,7 +199,8 @@ async def create_project(project: ProjectCreate):
             wordpress_app_password=project.wordpress_app_password,
             html_configs=project.html_configs,
             image_configs=project.image_configs,
-            notes=project.notes
+            notes=project.notes,
+            user_id=project.user_id
         )
 
         return {
@@ -207,11 +215,15 @@ async def create_project(project: ProjectCreate):
 
 
 @router.put("/{project_id}")
-async def update_project(project_id: str, updates: ProjectUpdate):
-    """Update a project"""
+async def update_project(
+    project_id: str,
+    updates: ProjectUpdate,
+    user_id: Optional[str] = Query(None, description="Verify ownership by user ID")
+):
+    """Update a project, optionally verify ownership"""
     try:
-        # Check if project exists
-        existing = db_get_project(project_id)
+        # Check if project exists (and user owns it if user_id provided)
+        existing = db_get_project(project_id, user_id=user_id)
         if not existing:
             raise HTTPException(status_code=404, detail="Project not found")
 
@@ -234,7 +246,7 @@ async def update_project(project_id: str, updates: ProjectUpdate):
         if updates.status is not None:
             update_data['status'] = updates.status
 
-        updated_project = db_update_project(project_id, **update_data)
+        updated_project = db_update_project(project_id, user_id=user_id, **update_data)
 
         return {
             "success": True,
@@ -251,15 +263,18 @@ async def update_project(project_id: str, updates: ProjectUpdate):
 
 
 @router.delete("/{project_id}")
-async def delete_project(project_id: str):
-    """Delete a project"""
+async def delete_project(
+    project_id: str,
+    user_id: Optional[str] = Query(None, description="Verify ownership by user ID")
+):
+    """Delete a project, optionally verify ownership"""
     try:
-        # Check if project exists
-        existing = db_get_project(project_id)
+        # Check if project exists (and user owns it if user_id provided)
+        existing = db_get_project(project_id, user_id=user_id)
         if not existing:
             raise HTTPException(status_code=404, detail="Project not found")
 
-        success = db_delete_project(project_id)
+        success = db_delete_project(project_id, user_id=user_id)
 
         if not success:
             raise HTTPException(status_code=500, detail="Failed to delete project")
